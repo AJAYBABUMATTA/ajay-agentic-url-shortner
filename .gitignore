@@ -1,0 +1,7 @@
+/target/
+/.idea/
+*.iml
+/.env
+/agent-workspaces/
+/runtime-evidence/
+*.log
