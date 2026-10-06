@@ -1,17 +1,20 @@
-# Engineering outcome status
+# Engineering outcomes
 
-No completed engineering outcome exists at checkpoint 1. Submission persists
-intake evidence and a pending interpretation task. It does not generate or validate
-URL-shortener changes and cannot reach release readiness.
+Current workflows produce reviewable requirement, ambiguity, repository inventory
+and dynamic plan artifacts with persisted attempt/hash lineage. They stop at
+clarification or change approval. These are planning outcomes, not completed
+engineering outcomes. No workflow can generate source or claim release readiness yet.
 
-The final persisted outcome (C4) must include requirement/revision lineage,
-criteria, plan/rationale, impacted runtime paths, production and test proposals,
-applied manifests/diffs, compilation/test/coverage evidence, diagnosis/repair and
-recovery actions, policy/security decisions, current evidence hashes, exact human
-approvals, assumptions, risks, trade-offs and limitations.
+Clarification creates a child revision. Requirement-dependent evidence/approvals are
+invalidated; unchanged repository inventory is reused only after current manifest
+verification. Inspection exposes original/current revision links and reuse IDs.
 
-Readiness will require every behavioral criterion to map to connected compiled
-production changes and meaningful discovered/executed generated tests. Passing
-unrelated tests, provider narratives, schema validity or a zero exit code without
-feature evidence cannot establish completion. Changed upstream artifacts invalidate
-dependent evidence and approvals. Incomplete outcomes stop or require intervention.
+The final outcome must additionally contain architecture rationale, structured
+production/test proposals, exact applied contents, manifests/diffs, real compiled
+source and discovered/executed tests, failure/repair/recovery evidence, security and
+policy decisions, authenticated exact approvals, risks, assumptions and limitations.
+
+Every behavioral criterion must connect to actual runtime production behavior and
+meaningful generated tests. Passing unrelated tests, schemas, narrative output or
+zero exit codes without feature evidence cannot establish readiness. Supported
+planning capabilities do not imply implemented generation/repair capabilities.

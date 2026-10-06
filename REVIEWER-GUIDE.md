@@ -1,47 +1,50 @@
-# Reviewer guide: checkpoint 1
+# Reviewer guide
 
-## What to assess now
+## Available behavior
 
-The caller boundary and durable foundation: a requirement creates a received
-workflow and pending interpretation task; callers cannot supply execution results.
-Do not assess this checkpoint as a completed agentic platform.
+Submit a requirement through POST /api/v1/workflows. The worker automatically
+interprets it, pauses ambiguity, or analyzes an isolated repository snapshot and
+persists a requirement-specific dependency graph. Engineering source generation and
+release readiness remain gated. Inspect ARCHITECTURE.md for boundaries/limitations.
+
+Start PostgreSQL/application using README. Then run:
 
 ```powershell
-.\mvnw.cmd --version
-.\mvnw.cmd '-Dtest=WorkflowApiTest,WorkflowPersistenceTest,ExecutionContractTest' test
-.\mvnw.cmd clean verify
-.\mvnw.cmd -Ppostgres-it clean verify
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\check-intelligence.ps1 -OperatorToken 'local-review-operator-token'
 ```
 
-Expected: Java 21 enforcement passes, tests pass with no failures/errors/skips,
-and a JaCoCo report is produced. Real PostgreSQL tests require Docker and an
-available `postgres:16-alpine` image. The profile fails if Docker is missing;
-default H2 test success does not replace PostgreSQL verification.
+Expected: distinct greenfield/brownfield plans, source type-reference reasoning,
+ambiguity pause, HTTP 401 without operator credentials, authenticated clarification
+revision, evidence invalidation, verified inventory reuse and rejected completion
+injection. Printed attempts and artifact hashes are persisted server evidence.
 
-Verified foundation results: 43 default tests plus 4 real PostgreSQL tests, for
-47 passing tests with zero failures, errors or skips. JaCoCo measured 83.09% line
-coverage and 54.55% branch coverage. Coverage thresholds are not yet enforced.
-The live foundation script also passed, confirming persisted intake and rejected
-caller completion requests. These results validate the foundation only.
+## Verification
 
-Start PostgreSQL and the application using README instructions, then run
-`scripts/check-foundation.ps1`. Expected: received workflow, pending task, audit
-event, HTTP 400 for caller completion injection, HTTP 404 for completion endpoint,
-and unchanged task/workflow state. Inspect readiness, OpenAPI and Prometheus.
+```powershell
+.\mvnw.cmd "-Dmaven.repo.local=$env:USERPROFILE\.m2\repository" '-Dtest=RequirementInterpreterTest,RepositoryToolsTest,DynamicPlannerTest,IntelligenceWorkflowTest,ScheduledIntelligenceTest' test
+.\mvnw.cmd "-Dmaven.repo.local=$env:USERPROFILE\.m2\repository" -Ppostgres-it clean verify
+```
 
-Inspect `src/main/resources/db/migration/V1__platform_foundation.sql` for all 14
-tables and composite evidence ownership constraints. Inspect `execution` for
-structured proposal, artifact, build, validation and recovery contracts; none is
-advertised as an implemented executor. Inspect `WorkflowPersistenceTest` for
-post-write transactional rollback and stale/cross-revision evidence rejection.
+Latest inspected clean verification: 75 default tests and six PostgreSQL integration
+tests passed (81 total), with zero failures, errors or skips. The native-link
+rejection test passed using the available Windows link capability. JaCoCo:
+901/957 lines (94.15%), 469/700 branches (67.00%). Live check-intelligence.ps1 passed against the restarted application, including
+controller-to-service reasoning, clarification revision and verified reuse.
+These Maven totals precede the target-package fix; final clean verification of
+the fix and its additional regression test remains pending.
 
-## Later acceptance
+Tests cover strict API inputs, transactional rollback, ownership/hashes, requirement
+ambiguity, bounded repository operations, graph variation/cycles, automatic scheduled
+dispatch, revision invalidation, upstream-source changes and verified reuse. Real
+PostgreSQL checks require Docker and fail if unavailable. Coverage is reported but
+not threshold-enforced. Reports live under target/surefire-reports,
+target/failsafe-reports and target/site/jacoco.
 
-C3 must demonstrate real generated service/source/tests and child Maven evidence.
-C4 must demonstrate recovery, governance and replanning. C5 must rebuild images,
-run all six demos and review every traceability row. Approval hashes must identify
-the exact reviewed plan/outcome, and generated behavior must reach actual APIs.
+## Final acceptance still required
 
-The agent performs no Git commands. The user commits each validated checkpoint
-and supplies its hash before the next begins. The final user-run `git diff --check`
-output is part of acceptance evidence.
+Generated service/source/tests must compile and execute through real child builds.
+Feature gates must prove connected runtime changes, discovered meaningful generated
+tests, policy success and current exact-evidence approvals. Recovery, rejected
+approval, rollback, dynamic execution replanning, final images and six demos remain
+pending. TRACEABILITY.md maps all PDF requirements without claiming storage/contracts
+are completed orchestration. The user runs final git diff --check.

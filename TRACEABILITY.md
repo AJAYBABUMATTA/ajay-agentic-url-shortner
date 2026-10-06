@@ -46,7 +46,7 @@ checks; they do not by themselves establish a passing result.
 | USER-08 | Compose, non-root images, two orchestrators, durable state, restart/failover, Prometheus and CI | C1 database/baseline metrics; C5 complete | partial foundation |
 | USER-09 | Numeric coverage enforcement and Java 21 enforcement | C1 Java rule/report; C5 coverage gate | report only; no coverage threshold yet |
 | USER-10 | Six API-driven demos showing actual persisted evidence | C4 scenarios; C5 scripts/final images | pending |
-| USER-11 | Nine accurate documents and staged approval/manual Git process | C1 documentation; maintained each checkpoint | established |
+| USER-11 | Nine accurate documents and staged approval/manual Git process | Maintained through intelligence/planning | implemented |
 
 ## Delivery sequence and approval boundary
 
@@ -56,6 +56,28 @@ checks; they do not by themselves establish a passing result.
 4. Stateful orchestration, recovery, governance and scenario coverage.
 5. Service hardening, deployment, failover, CI and final acceptance.
 
-Only checkpoint 1 is authorized. Later checkpoints require user validation and
+Requirement intelligence/planning (checkpoint 2) is authorized after user validation of the foundation. Later checkpoints require user validation and
 the user-created commit hash. No Git operations are performed by the agent.
 Final `git diff --check` is run by the user and returned as evidence.
+
+## Implemented requirement intelligence and planning
+
+| PDF row | Implementation | Automated evidence | Live reviewer command | Status |
+|---|---|---|---|---|
+| PDF-03 | RequirementInterpreter; authenticated RevisionService | 9 interpreter cases; workflow clarification/authentication tests | check-intelligence.ps1 ambiguous section | implemented; live verification passed |
+| PDF-04 / PDF-07 | DynamicPlanner; GraphValidator; persisted tasks/edges/gates | Different criteria/repositories, overlap sequencing, parallel layers, joins, cycles | check-intelligence.ps1 greenfield/brownfield | implemented planning; engineering gate execution pending |
+| PDF-05 | RepositoryAnalyzer type/route/reference map | Controller -> service impact and upstream-change checks | check-intelligence.ps1 brownfield section | implemented static reasoning; runtime enhancement pending |
+| PDF-06 | Four intelligence Agent roles through ModelProvider/AgentExecutor | ScheduledIntelligenceTest proves automatic stage dispatch | Workflow GET analyses/artifacts/attempts | implemented intelligence; full SDLC pending |
+| PDF-09 | Parent revisions, invalidation, exact-manifest repository inventory reuse | Clarification, stale revision, changed source and approval invalidation | check-intelligence.ps1 clarification/replan sections | implemented revision planning; downstream recovery pending |
+| PDF-12 | RepositoryTools bounded UTF-8 roots/types/count/size/search/link checks | RepositoryToolsTest; Windows native-link rejection passed | Latest targeted suite | implemented guards; hostile-process OS isolation pending |
+| PDF-13 / PDF-17 | Attempt/artifact/validation/audit storage; no completion API | 26 API boundary checks and analysis workflow tests | check-intelligence.ps1, check-foundation.ps1 | implemented analysis lineage; final outcome pending |
+
+Initial matrix entries above identify the original foundation and later delivery
+allocation. This table records the subsequent implemented behavior without claiming
+that a plan is a completed engineering outcome. Four analysis stages run; production
+generation/build/recovery/release/failover are still pending. Latest inspected clean verification
+passed 75 default tests and six PostgreSQL integration tests (81 total), with no
+failures, errors or skips. Coverage: 901/957 lines (94.15%) and 469/700 branches
+(67.00%). Live intelligence verification passed. The reported Maven totals precede the
+target-package exclusion fix; clean verification of its additional regression
+test remains pending.

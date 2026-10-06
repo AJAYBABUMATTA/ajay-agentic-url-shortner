@@ -2,6 +2,13 @@ package dev.ajaymatta.agentic.workflow;
 
 import dev.ajaymatta.agentic.workflow.api.SubmitRequirement;
 import dev.ajaymatta.agentic.workflow.application.WorkflowService;
+import dev.ajaymatta.agentic.intelligence.RequirementProcessor;
+import dev.ajaymatta.agentic.intelligence.RevisionRequests;
+import dev.ajaymatta.agentic.intelligence.RevisionService;
+import dev.ajaymatta.agentic.workflow.domain.WorkflowStatus;
+import java.nio.file.Path;
+import java.util.Map;
+import org.junit.jupiter.api.io.TempDir;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,10 +29,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /** Opt-in real PostgreSQL verification; missing Docker fails rather than silently skipping. */
-@SpringBootTest
+@SpringBootTest(properties="agentic.processing.enabled=false")
 @AutoConfigureMockMvc
 @Testcontainers
 class PostgresFoundationIT {
+    @TempDir static Path workspace;
     @Container
     static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:16-alpine");
 
@@ -34,18 +42,21 @@ class PostgresFoundationIT {
         registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);
         registry.add("spring.datasource.username", POSTGRES::getUsername);
         registry.add("spring.datasource.password", POSTGRES::getPassword);
+        registry.add("agentic.workspaces.root", () -> workspace.resolve("workspaces").toString());
     }
 
     @Autowired WorkflowService service;
     @Autowired JdbcTemplate jdbc;
     @Autowired MockMvc mvc;
+    @Autowired RequirementProcessor processor;
+    @Autowired RevisionService revisions;
 
     @Test
     void actualPostgresMigrationAndWorkflowReadback() {
         var submitted = service.submit(new SubmitRequirement("Create a URL-shortener", "greenfield"));
         assertThat(service.get(submitted.workflow().id())).isEqualTo(submitted);
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM \"flyway_schema_history\" WHERE \"success\"=TRUE", Integer.class))
-                .isEqualTo(1);
+                .isEqualTo(2);
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='public' "
                 + "AND table_name IN ('workflows','workflow_revisions','agent_tasks','task_dependencies','engineering_artifacts',"
                 + "'execution_attempts','validation_results','build_evidence','repository_workspaces','policy_decisions',"
@@ -74,5 +85,29 @@ class PostgresFoundationIT {
     @Test
     void readinessIncludesActualPostgresConnection() throws Exception {
         mvc.perform(get("/actuator/health/readiness")).andExpect(status().isOk()).andExpect(jsonPath("$.status").value("UP"));
+    }
+
+    @Test
+    void actualPostgresPersistsAutomaticPlanningArtifactsAndAttempts() {
+        var submitted = service.submit(new SubmitRequirement("Create URL-shortener with HTTP 302 redirects", "greenfield-url-shortener"));
+        processor.process(submitted.workflow().id());
+        var planned = service.get(submitted.workflow().id());
+        assertThat(planned.workflow().status()).isEqualTo(WorkflowStatus.AWAITING_CHANGE_APPROVAL);
+        assertThat(planned.intelligence().attempts()).hasSize(4);
+        assertThat(planned.intelligence().artifacts()).hasSize(5);
+        assertThat(planned.intelligence().planHash()).matches("[a-f0-9]{64}");
+    }
+
+    @Test
+    void actualPostgresClarificationCreatesLineageAndInvalidatesPriorEvidence() {
+        var submitted = service.submit(new SubmitRequirement("Create URL-shortener with expiry", "greenfield-url-shortener"));
+        processor.process(submitted.workflow().id());
+        assertThat(service.get(submitted.workflow().id()).workflow().status()).isEqualTo(WorkflowStatus.AWAITING_CLARIFICATION);
+        revisions.clarify(submitted.workflow().id(), new RevisionRequests.Clarification(1, Map.of("Q-EXPIRY", "24 hours")), "integration-test-operator");
+        processor.process(submitted.workflow().id());
+        var clarified = service.get(submitted.workflow().id());
+        assertThat(clarified.workflow().status()).isEqualTo(WorkflowStatus.AWAITING_CHANGE_APPROVAL);
+        assertThat(clarified.revision().parentRevisionId()).isEqualTo(submitted.revision().id());
+        assertThat(clarified.intelligence().invalidatedArtifactIds()).hasSize(2);
     }
 }

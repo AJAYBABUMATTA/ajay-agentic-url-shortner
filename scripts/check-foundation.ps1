@@ -29,8 +29,8 @@ $submitted = Invoke-RestMethod -Method Post -Uri "$BaseUrl/api/v1/workflows" `
     -ContentType 'application/json' -Body $body
 $id = $submitted.workflow.id
 $current = Invoke-RestMethod "$BaseUrl/api/v1/workflows/$id"
-if ($current.workflow.status -ne 'RECEIVED' -or $current.tasks[0].state -ne 'PENDING' `
-    -or $current.executionEnabled -or $current.sourceMutationAllowed) { throw 'Unexpected foundation state' }
+if ($current.workflow.status -notin @('RECEIVED','INTERPRETING','PLANNING','AWAITING_CHANGE_APPROVAL') `
+    -or $current.executionEnabled -or $current.sourceMutationAllowed) { throw 'Unexpected intake/engineering gate state' }
 if ($current.audit[0].eventType -ne 'REQUIREMENT_RECEIVED') { throw 'Submission audit missing' }
 
 $injected = @{
@@ -42,8 +42,8 @@ Assert-RejectedRequest "$BaseUrl/api/v1/workflows" $injected 400
 Assert-RejectedRequest "$BaseUrl/api/v1/workflows/$id/tasks/$($current.tasks[0].id)/complete" '{}' 404
 
 $after = Invoke-RestMethod "$BaseUrl/api/v1/workflows/$id"
-if ($after.workflow.status -ne 'RECEIVED' -or $after.tasks[0].state -ne 'PENDING' `
-    -or $after.tasks[0].attemptCount -ne 0) { throw 'Caller changed execution state' }
+if ($after.executionEnabled -or $after.sourceMutationAllowed `
+    -or @($after.tasks | Where-Object { $_.role -eq 'IMPLEMENTATION' -and $_.state -ne 'PENDING' }).Count -ne 0) { throw 'Caller bypassed engineering execution gate' }
 
 Write-Output 'Foundation checks passed: persisted intake; completion injection 400; completion endpoint 404.'
 $after | ConvertTo-Json -Depth 10

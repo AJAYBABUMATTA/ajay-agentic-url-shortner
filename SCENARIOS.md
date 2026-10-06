@@ -1,25 +1,23 @@
 # Scenarios
 
-## Available now: foundation intake
+Run scripts/check-intelligence.ps1 against the current PostgreSQL-backed application.
+It performs API-driven submission, polling and authenticated revision updates.
 
-Run `scripts/check-foundation.ps1` against a running platform. It submits a
-requirement, reads its persisted workflow/revision/task/audit, checks that execution
-and mutation are disabled, attempts an injected completion field and confirms HTTP
-400, then attempts an unsupported task-completion operation and confirms HTTP 404.
-The task remains pending. This is caller-boundary evidence, not engineering execution.
-
-## Planned scenario acceptance
-
-| Scenario | Required result | Checkpoint |
+| Scenario | Current evidence | Remaining engineering proof |
 |---|---|---|
-| Greenfield | Requirement generates runnable service/source/tests; actual compiler and discovered tests pass | C3 |
-| Brownfield | Existing runtime path changes; generated tests prove new behavior and regression compatibility | C4 |
-| Ambiguous | Mutation blocked; authenticated clarification creates child revision and new plan | C2/C4 |
-| Repair | Actual compiler/test failure produces diagnosis and guarded repair, then a passing real build | C4 |
-| Approval rejection | Exact evidence rejected by an authorized human; execution/release gate stays closed | C4 |
-| Safe stop / rollback | Bounded failure or cancellation stops safely; restoration verified by baseline manifest | C4 |
-| Replanning | Upstream change invalidates dependent evidence/approvals and changes the graph | C4 |
-| Failover | Second orchestrator safely recovers work without accepting stale worker writes | C5 |
+| Greenfield | Automatic criteria, isolated snapshot, dynamic graph, four real analysis attempts | Generated runnable production/tests and child build |
+| Brownfield | Actual controller/service reference map and criterion-specific impacts | Enhancement of connected redirect/analytics runtime path |
+| Ambiguous | No repository/workspace stage; authenticated expiry clarification creates child revision | Integration with complete engineering execution |
+| Replanning | Requirement change invalidates derived artifacts; unchanged verified inventory reused | Execution-stage recovery/replanning after downstream failure |
+| Repository failure | Unsafe/unavailable input enters SAFE_STOPPED | Governed rollback/retry policies |
 
-`demo.ps1 greenfield`, `brownfield`, `ambiguous`, `repair`, `safe-stop` and `failover`
-will be delivered and run against final images in C5. They do not exist yet.
+Automated tests also change upstream repository source and prove inventory reuse
+is rejected when the manifest changes. No human provides node output or completion.
+Scripts print real persisted IDs, criteria, graphs, hashes and attempts.
+
+check-foundation.ps1 still verifies the caller boundary while allowing automatic
+analysis progress. check-intelligence.ps1 verifies the complete planning stage.
+The final demo.ps1 greenfield, brownfield,
+ambiguous, repair, safe-stop and failover commands arrive with final-image acceptance.
+Repair, release approval rejection, baseline restoration and two-worker failover
+are not implemented or demonstrated yet.

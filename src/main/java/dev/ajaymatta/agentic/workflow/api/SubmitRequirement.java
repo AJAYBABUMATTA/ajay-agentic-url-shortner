@@ -9,5 +9,5 @@ public record SubmitRequirement(
         @NotBlank @Size(max = 10000)
         @Schema(example = "Create a URL-shortener with HTTP 302 redirects") String requirement,
         @NotBlank @Size(max = 512)
-        @Schema(example = "greenfield-url-shortener", description = "Repository selector; not accessed in foundation")
+        @Schema(example = "greenfield-url-shortener", description = "Relative selector under approved repository root; accessed only after ambiguity is resolved")
         String repositoryPath) {}

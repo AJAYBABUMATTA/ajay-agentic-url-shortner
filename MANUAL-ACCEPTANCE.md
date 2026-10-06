@@ -1,32 +1,34 @@
-# Manual acceptance checklist
+# Manual acceptance
 
-## Foundation checkpoint
+## Requirement intelligence and planning
 
-- [ ] Java 21 and pinned Maven Wrapper confirmed.
-- [ ] Targeted tests and full Maven verification pass; exact totals recorded.
-- [ ] Real PostgreSQL migration/API/constraint profile passes.
-- [ ] Database and application start from README commands.
-- [ ] Liveness and database-aware readiness respond UP.
-- [ ] Strict submission accepts only requirement/repositoryPath and returns 202/Location.
-- [ ] GET returns persisted revision, pending task, requirement hash and audit.
-- [ ] Completion/evidence injection returns 400 without creating records.
-- [ ] Completion endpoint returns 404; PUT/PATCH mutation returns 405.
-- [ ] OpenAPI exposes submission/inspection only; Prometheus has baseline metrics.
-- [ ] Coverage report inspected; numeric enforcement is explicitly pending.
-- [ ] User validates checkpoint and creates the commit manually.
+- [x] Default clean verification completed: 75 passed, zero failures/errors/skips.
+- [x] Automatic scheduled dispatch tested without a user stage command.
+- [x] Clear/ambiguous requirements and missing/conflicting policies tested.
+- [x] Authentication, expected-revision conflicts and invalid answer IDs tested.
+- [x] Distinct requirements/repositories produce different task graphs/impacts.
+- [x] Ambiguity causes no workspace creation or source mutation.
+- [x] Verified snapshots preserve source/baseline and reject unsafe/oversized inputs.
+- [x] Requirement replanning invalidates evidence/approvals and verifies inventory reuse.
+- [x] Upstream source changes prevent inventory reuse in automated tests.
+- [x] Updated native-link rejection test passes on Windows.
+- [x] Six real PostgreSQL checks pass with the latest source (81 total tests).
+- [x] Live check-intelligence.ps1 passes against restarted latest application.
+- [ ] Current targeted tests and final verification results recorded.
+- [ ] User validates this delivery and creates the commit manually.
 
-## Final assessment acceptance (pending C3-C5)
+## Final assessment acceptance
 
-- [ ] Requirement-specific plans and connected generated production/tests demonstrated.
-- [ ] All ten completion gates satisfied using current-revision evidence.
-- [ ] All three PDF scenarios and six requested demos pass against final images.
-- [ ] Real failure/repair, rejected approval, verified rollback and replanning inspected.
-- [ ] Generated source, tests, diffs, manifests, logs, hashes and outcomes reviewed.
-- [ ] Full Maven verification totals and enforced coverage recorded.
-- [ ] Two-orchestrator restart/failover evidence reviewed.
-- [ ] Final images rebuilt and Compose validated.
-- [ ] User-run `git diff --check` passes.
-- [ ] All PDF traceability rows verified; optional hardening identified separately.
+- [ ] First complete generated, compiled and tested URL-shortener slice.
+- [ ] Every behavioral criterion maps to connected production and meaningful tests.
+- [ ] Failure-driven repair, bounded retry/fallback, verified rollback and safe stop.
+- [ ] Authenticated exact plan/outcome approval, rejection and invalidation.
+- [ ] Reliability metrics and end-to-end lineage verified.
+- [ ] Complete service API, security, analytics, rate limiting and concurrency checks.
+- [ ] Non-root images, two orchestrators, durable recovery and failover proven.
+- [ ] Coverage threshold enforced; final Maven totals recorded.
+- [ ] Images rebuilt, Compose validated, six demos run against final images.
+- [ ] Generated source/tests/diffs/manifests/logs/hashes/outcomes inspected.
+- [ ] User-run git diff --check and all PDF traceability rows verified.
 
-Unchecked items are not completed claims. Record actual command output and dates
-at checkpoint handoff; documentation and unit tests alone cannot satisfy final acceptance.
+Documentation or passing platform tests alone do not satisfy engineering acceptance.

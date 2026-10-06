@@ -3,6 +3,8 @@ package dev.ajaymatta.agentic.workflow.application;
 import dev.ajaymatta.agentic.execution.AgentRole;
 import dev.ajaymatta.agentic.execution.Hashes;
 import dev.ajaymatta.agentic.governance.AuditEvent;
+import dev.ajaymatta.agentic.intelligence.IntelligenceStore;
+import dev.ajaymatta.agentic.repository.RepositoryTools;
 import dev.ajaymatta.agentic.workflow.api.SubmitRequirement;
 import dev.ajaymatta.agentic.workflow.api.WorkflowDetails;
 import dev.ajaymatta.agentic.workflow.domain.AgentTask;
@@ -26,14 +28,17 @@ import org.springframework.web.server.ResponseStatusException;
 public class WorkflowService {
     private final WorkflowRepository repository;
     private final Clock clock;
+    private final IntelligenceStore intelligence;
 
-    public WorkflowService(WorkflowRepository repository, Clock clock) {
+    public WorkflowService(WorkflowRepository repository, Clock clock, IntelligenceStore intelligence) {
         this.repository = repository;
         this.clock = clock;
+        this.intelligence = intelligence;
     }
 
     @Transactional
     public WorkflowDetails submit(SubmitRequirement request) {
+        RepositoryTools.validateSelector(request.repositoryPath().strip());
         Instant now = clock.instant().truncatedTo(ChronoUnit.MICROS);
         UUID workflowId = UUID.randomUUID();
         UUID revisionId = UUID.randomUUID();
@@ -59,6 +64,6 @@ public class WorkflowService {
 
     private WorkflowDetails details(Workflow workflow, WorkflowRevision revision) {
         return new WorkflowDetails(workflow, revision, repository.tasks(revision.id()),
-                repository.dependencies(revision.id()), repository.audit(workflow.id()), false, false);
+                repository.dependencies(revision.id()), repository.audit(workflow.id()), false, false, intelligence.view(revision.id()));
     }
 }

@@ -6,3 +6,8 @@ spring:
     driver-class-name: org.h2.Driver
   flyway:
     enabled: true
+agentic:
+  processing:
+    enabled: false
+  operator:
+    token: test-only-operator-token

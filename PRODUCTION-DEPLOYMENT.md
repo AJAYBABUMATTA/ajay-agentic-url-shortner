@@ -1,23 +1,25 @@
-# Deployment status and controls
+# Deployment status
 
-This checkpoint is a local-review foundation, not an approved production deployment.
-`compose.yaml` provides PostgreSQL 16 with a named durable volume, healthcheck,
-required environment password and localhost-only published port. The application
-runs through Maven against PostgreSQL. No application image is supplied yet.
+This is a local assessment prototype with runnable requirement intelligence and
+planning. Compose currently supplies PostgreSQL 16 on localhost with a required
+password and durable named volume. The application runs through Maven. No final
+application/build image or two-orchestrator configuration exists yet.
 
-Set DB credentials in the process environment. Do not commit `.env`, secrets,
-workspace outputs or build logs. Flyway clean is disabled. H2 is test-only.
+Configure DB_URL, DB_USERNAME, DB_PASSWORD and AGENTIC_OPERATOR_TOKEN explicitly.
+The operator token has no insecure default. Use distinct approved repository and
+workspace roots with restrictive access; workspace/source inventory can contain
+private engineering material. Do not commit secrets or runtime workspaces.
 
-Before deployment, C5 must provide non-root application/build images, two
-orchestrators, shared durable artifact/workspace storage, worker leases and fencing,
-restart/failover evidence, CI, database backup/restore guidance and resource controls.
-Authentication/authorization, least-privilege database roles, TLS, protected metrics
-and API access must be configured for the deployment environment.
+The intake worker claims rows atomically. It is not a distributed crash-recovery
+worker: interrupted claimed analysis can require intervention. Single-instance
+review is supported now; leases/fencing, recovery and failover are required before
+running multiple orchestrators.
 
-Build workers execute repository build logic. They must not inherit platform,
-operator, model or production credentials. Network/CPU/memory/time/file bounds
-and isolation are required in addition to fixed command capabilities.
+Pending deployment work: non-root app/build images, isolated restricted build
+workers without platform credentials, durable shared evidence storage, backups,
+identity/roles, TLS, protected metrics, resource/network controls, CI, coverage
+thresholds and restart/failover evidence. Flyway clean is disabled; H2 is test-only.
 
-Optional hardening after assessment acceptance: Kubernetes, multi-region operation,
-external identity federation, distributed tracing and dedicated hardened build hosts.
-No Redis, Kafka or external model service is needed for the deterministic acceptance path.
+Optional after acceptance: Kubernetes, multi-region deployment, dedicated hardened
+build hosts, distributed tracing and external models. Redis/Kafka are not required
+for the deterministic assessment path.

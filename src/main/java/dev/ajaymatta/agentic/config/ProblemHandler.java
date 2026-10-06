@@ -2,6 +2,7 @@ package dev.ajaymatta.agentic.config;
 
 import java.net.URI;
 import java.util.List;
+import dev.ajaymatta.agentic.repository.RepositoryTools.RepositoryPolicyException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
@@ -47,6 +48,11 @@ public class ProblemHandler extends ResponseEntityExceptionHandler {
                 .body(problem(HttpStatus.INTERNAL_SERVER_ERROR, "An internal platform error occurred"));
     }
 
+    @ExceptionHandler(RepositoryPolicyException.class)
+    public ResponseEntity<ProblemDetail> repositoryPolicy(RepositoryPolicyException exception) {
+        return ResponseEntity.badRequest().body(problem(HttpStatus.BAD_REQUEST, "Repository selector or operation violates repository policy"));
+    }
+
     private static ProblemDetail problem(HttpStatusCode status, String detail) {
         ProblemDetail result = ProblemDetail.forStatusAndDetail(status, detail);
         result.setType(URI.create("urn:agentic:problem:http-" + status.value()));
@@ -58,6 +64,9 @@ public class ProblemHandler extends ResponseEntityExceptionHandler {
             case 400 -> "Malformed or unsupported request; only documented fields and types are accepted";
             case 404 -> "Requested resource was not found";
             case 405 -> "This operation is not supported";
+            case 401 -> "Operator authentication required";
+            case 409 -> "Revision or workflow state conflicts with this operation";
+            case 503 -> "Required platform capability is not configured";
             case 415 -> "Request content type is not supported";
             default -> "Request could not be processed";
         };

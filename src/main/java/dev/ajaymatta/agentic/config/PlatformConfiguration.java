@@ -6,16 +6,19 @@ import com.fasterxml.jackson.core.StreamReadFeature;
 import com.fasterxml.jackson.databind.cfg.CoercionAction;
 import com.fasterxml.jackson.databind.cfg.CoercionInputShape;
 import com.fasterxml.jackson.databind.type.LogicalType;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import java.time.Clock;
 import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilderCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 @Configuration
+@EnableScheduling
 public class PlatformConfiguration {
     @Bean
     Jackson2ObjectMapperBuilderCustomizer strictRequests() {
-        return builder -> builder.featuresToEnable(StreamReadFeature.STRICT_DUPLICATE_DETECTION.mappedFeature())
+        return builder -> builder.featuresToEnable(StreamReadFeature.STRICT_DUPLICATE_DETECTION.mappedFeature(), SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS)
                 .postConfigurer(mapper -> {
                     var text = mapper.coercionConfigFor(LogicalType.Textual);
                     text.setCoercion(CoercionInputShape.Integer, CoercionAction.Fail);
@@ -33,7 +36,7 @@ public class PlatformConfiguration {
     OpenAPI platformApi() {
         return new OpenAPI().info(new Info().title("Agentic Engineering Platform")
                 .version("0.1.0")
-                .description("Foundation: requirement submission and durable workflow inspection. "
-                        + "Engineering execution will be added in subsequent checkpoints."));
+                .description("Automatic requirement interpretation, ambiguity handling, isolated repository analysis "
+                        + "and dynamic planning. Engineering source generation and build execution remain gated."));
     }
 }
