@@ -42,6 +42,7 @@ springdoc:
   swagger-ui:
     path: /swagger-ui.html
 agentic:
+  instance-id: ${AGENTIC_INSTANCE_ID:local-worker}
   build:
     assets-root: ${AGENTIC_BUILD_ASSETS_ROOT:.}
     maven-repository: ${AGENTIC_MAVEN_REPOSITORY:}

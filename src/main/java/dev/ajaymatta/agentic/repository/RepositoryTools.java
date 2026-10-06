@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class RepositoryTools {
     private static final Set<String> EXCLUDED = Set.of(".git", ".idea", "target", "node_modules", ".env", ".aws", ".codex");
-    private static final Set<String> EXTENSIONS = Set.of("java", "xml", "md", "yaml", "yml", "json", "properties", "txt", "ps1", "sh");
+    private static final Set<String> EXTENSIONS = Set.of("java", "xml", "md", "yaml", "yml", "json", "properties", "txt", "ps1", "sh", "sql");
     private final Path approvedRoot;
     private final Path workspaceRoot;
     private final int maximumFiles;

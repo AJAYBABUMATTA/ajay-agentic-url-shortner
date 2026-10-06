@@ -30,5 +30,26 @@ a fresh requirement-specific revision and invalidates derived artifacts/approval
 changed source prevents repository-map reuse. Existing intelligence tests additionally
 cover unchanged-manifest reuse and graph variation/cycles.
 
-Failover demo and all demos against final Docker images belong to stage 5. Current
+The failover demo requires the final Compose pair. Final-image acceptance status is in REVIEWER-GUIDE.md. Current
 local demos do not claim distributed crash recovery or production readiness.
+## Final image scenarios
+
+Greenfield now declares all nine capabilities and generates the complete persistent
+service (eleven production classes, nine HTTP tests). Minimal greenfield remains
+available by submitting only creation/redirect requirements. Brownfield intentionally
+retains the original in-memory runtime while connecting total and UTC analytics.
+Ambiguous pauses and creates a clarified child revision before any mutation. Repair
+uses genuine failed compiler evidence; safe-stop restores an unsupported failure.
+
+For failover, run demo.ps1 failover -BaseUrl http://localhost:18080. Review and approve
+the printed exact plan. Its continuation waits for a RUNNING validate-build task,
+abruptly terminates its owning Compose service, reads recovery from the survivor,
+requires a failover audit and verified baseline rollback with no outcome, then restarts
+the terminated service. Peer URL defaults to localhost:18081; supply ComposeProject
+when using another Compose project name. Fresh review is required after recovery.
+
+scripts/acceptance.ps1 runs all six disposable fixtures through their real APIs,
+exports plans and persisted outcomes, and records its automated test identity. Optional
+-ApproveFixtureOutcomes tests all ten gates with explicit fixture approvals. Ordinary
+interactive demos never implicitly approve a plan or outcome. These fixtures use only
+original source from scenario-repositories; execution never modifies that directory.

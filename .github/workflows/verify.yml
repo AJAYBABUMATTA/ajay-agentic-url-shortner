@@ -1,0 +1,40 @@
+name: Verify agentic platform
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  verification:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      DB_PASSWORD: ci-disposable-database-only
+      AGENTIC_OPERATOR_TOKEN: ci-disposable-fixture-only
+      POSTGRES_PORT: 55432
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - name: Wrapper permissions and complete verification
+        run: chmod 755 mvnw && ./mvnw -B -ntp -Ppostgres-it clean verify
+      - name: Validate and build final-source images
+        run: docker compose -p agentic-ci config --quiet && docker compose -p agentic-ci build && docker compose -p agentic-ci up -d --wait
+      - name: Six API-driven fixture scenarios against final image
+        shell: pwsh
+        run: ./scripts/acceptance.ps1 -ComposeProject agentic-ci -ApproveFixtureOutcomes
+      - name: Retain test, coverage and persisted runtime evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: engineering-evidence
+          path: |
+            target/surefire-reports
+            target/failsafe-reports
+            target/site/jacoco
+            target/stage5-full-evidence
+            runtime-evidence
+      - name: Stop acceptance containers
+        if: always()
+        run: docker compose -p agentic-ci down

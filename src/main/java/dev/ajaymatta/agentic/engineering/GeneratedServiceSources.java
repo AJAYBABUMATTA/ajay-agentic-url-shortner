@@ -22,7 +22,11 @@ final class GeneratedServiceSources {
                   <executions><execution><goals><goal>enforce</goal></goals><configuration><rules><requireJavaVersion><version>[21,22)</version></requireJavaVersion></rules></configuration></execution></executions>
                 </plugin>
                 <plugin><groupId>org.jacoco</groupId><artifactId>jacoco-maven-plugin</artifactId><version>0.8.13</version>
-                  <executions><execution><goals><goal>prepare-agent</goal></goals></execution><execution><id>coverage</id><phase>verify</phase><goals><goal>report</goal></goals></execution></executions>
+                  <executions><execution><goals><goal>prepare-agent</goal></goals></execution><execution><id>coverage</id><phase>verify</phase><goals><goal>report</goal></goals></execution>
+                    <execution><id>coverage-check</id><phase>verify</phase><goals><goal>check</goal></goals><configuration><rules><rule><element>BUNDLE</element><limits>
+                      <limit><counter>LINE</counter><value>COVEREDRATIO</value><minimum>0.80</minimum></limit>
+                      <limit><counter>BRANCH</counter><value>COVEREDRATIO</value><minimum>0.50</minimum></limit>
+                    </limits></rule></rules></configuration></execution></executions>
                 </plugin>
               </plugins></build>
             </project>

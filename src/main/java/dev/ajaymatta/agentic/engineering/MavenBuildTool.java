@@ -33,7 +33,7 @@ public class MavenBuildTool implements EngineeringTool<Void,BuildEvidence> {
     public BuildEvidence executeControlled(RepositoryWorkspace workspace,java.util.function.BooleanSupplier cancelled) {
         Instant started=Instant.now();
         var current=proposals.read(workspace);
-        for(var asset:assets.buildFiles().entrySet()) if(!asset.getValue().equals(current.get(asset.getKey()))) throw new IllegalArgumentException("Untrusted build configuration or wrapper");
+        for(var asset:assets.buildFiles().entrySet()) if(!asset.getValue().equals(current.get(asset.getKey())) && !(asset.getKey().equals("pom.xml") && FullShortenerSources.POM.equals(current.get("pom.xml")))) throw new IllegalArgumentException("Untrusted build configuration or wrapper");
         // No repository-provided Maven extensions, settings or alternate toolchain hooks.
         if(current.keySet().stream().anyMatch(p -> p.startsWith(".mvn/") && !p.equals(".mvn/wrapper/maven-wrapper.properties"))) throw new IllegalArgumentException("Untrusted Maven extension");
         List<String> command=new ArrayList<>();

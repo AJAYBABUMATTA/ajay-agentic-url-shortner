@@ -22,18 +22,23 @@ public class RequirementProcessor {
     private final IntelligenceExecutor executor;
     private final RepositoryTools tools;
     private final boolean enabled;
+    private final dev.ajaymatta.agentic.engineering.WorkerLeases leases;
     public RequirementProcessor(IntelligenceStore store, WorkflowRepository workflows, IntelligenceExecutor executor,
-            RepositoryTools tools, @Value("${agentic.processing.enabled:true}") boolean enabled) {
+            RepositoryTools tools, @Value("${agentic.processing.enabled:true}") boolean enabled,dev.ajaymatta.agentic.engineering.WorkerLeases leases) {
         this.store = store; this.workflows = workflows; this.executor = executor; this.tools = tools; this.enabled = enabled;
+        this.leases=leases;
     }
     @Scheduled(fixedDelayString = "${agentic.processing.poll-ms:500}")
     public void poll() { if (enabled) for (UUID id : store.received()) process(id); }
 
     public void process(UUID workflowId) {
-        if (!store.claim(workflowId)) return;
         var workflow = workflows.find(workflowId).orElseThrow();
         var revision = workflows.revision(workflowId, workflow.currentRevision());
+        var ownership=leases.acquire(workflowId,revision.id(),"INTELLIGENCE",false);
+        if(ownership.isEmpty()) return;
+        try(var lease=ownership.get()) {
         try {
+            if (!store.claim(workflowId)) return;
             var interpretation = store.task(revision.id(), "interpret-requirement", AgentRole.REQUIREMENT_INTERPRETATION, List.of());
             Map<String, EngineeringArtifact> humanInputs = new LinkedHashMap<>();
             store.artifacts(revision.id()).stream().filter(a -> a.schemaVersion().equals("clarification/1.0")).findFirst()
@@ -65,6 +70,7 @@ public class RequirementProcessor {
             if (failure instanceof RepositoryTools.RepositoryPolicyException) store.denyRepository(revision.id(), revision.repositoryPath());
             store.audit(workflowId, revision.id(), null, "PROCESSING_SAFE_STOP", "platform:intelligence", "classification=" + failure.getClass().getSimpleName());
             store.status(workflowId, revision.id(), WorkflowStatus.SAFE_STOPPED);
+        }
         }
     }
     private ExecutionContext context(WorkflowRevision revision, AgentTask task, Map<String, EngineeringArtifact> inputs) {

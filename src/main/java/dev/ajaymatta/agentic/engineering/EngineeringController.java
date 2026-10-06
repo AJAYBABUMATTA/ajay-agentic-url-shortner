@@ -17,10 +17,13 @@ public class EngineeringController {
     private final EngineeringStore store;
     private final ReleaseApprovalService releases;
     private final ExecutionControlService control;
-    public EngineeringController(ChangeApprovalService approvals,OperatorAuthorization authorization,WorkflowService workflows,EngineeringStore store,ReleaseApprovalService releases,ExecutionControlService control) {
+    private final WorkerLeases leases;
+    public EngineeringController(ChangeApprovalService approvals,OperatorAuthorization authorization,WorkflowService workflows,EngineeringStore store,ReleaseApprovalService releases,ExecutionControlService control,WorkerLeases leases) {
         this.approvals=approvals; this.authorization=authorization; this.workflows=workflows; this.store=store;
         this.releases=releases; this.control=control;
+        this.leases=leases;
     }
+    @GetMapping("/workers") public java.util.List<WorkerLeases.Owner> workers(@PathVariable UUID id) { workflows.get(id); return leases.owners(id); }
     @PostMapping("/release-approvals")
     public ResponseEntity<?> release(@PathVariable UUID id,@Valid @RequestBody ReleaseApprovalService.Request request,
             @RequestHeader(value="X-Operator-Id",required=false) String actor,@RequestHeader(value="X-Operator-Token",required=false) String token) {

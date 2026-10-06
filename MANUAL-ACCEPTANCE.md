@@ -1,33 +1,24 @@
 # Manual acceptance
 
-## Stage 4 scope
+Stages 1–4 were validated and committed by the user. Latest approved stage-4 hash:
+510c2472e0e4c3189edc3c662966f117b145081c. Stage 5 runtime checks have passed; no Git operations
+are performed by the implementation agent.
 
-- [x] Parallel ready branches; dependent shared-file proposals serialize and join.
-- [x] Connected brownfield total/UTC daily analytics with retained baseline regression.
-- [x] Real compiler and production HTTP-test failures lead to scoped repairs and real rebuilds.
-- [x] Three-build bound; unsupported diagnosis restores baseline and stops.
-- [x] Cancellation during real Maven verification terminates child execution before rollback.
-- [x] Exact current plan/outcome approval, rejection, stale conflicts and invalidation.
-- [x] Ten feature gates connect criteria, current production/tests, actual build evidence and policy/human decisions.
-- [x] Upstream change prevents stale release; authenticated replanning creates fresh lineage.
-- [x] Complete outcome includes assumptions/risks/limitations/approvals/policies/attempts/recovery.
-- [x] Reliability metrics implemented with bounded labels and durable success gauge.
-- [x] Stage-4 clean verification: 115 passing; final targeted correction check: 12 passing; exact coverage and evidence recorded in REVIEWER-GUIDE.md.
-- [ ] User validates persistent local demos and supplies manual commit hash.
+- [x] Automatic interpretation, ambiguity pause, repository analysis and dynamic planning.
+- [x] Controlled original generation, real compilation/discovered HTTP tests and ten gates.
+- [x] Connected brownfield changes, genuine compiler/test repair, bounded fallback/rollback.
+- [x] Exact plan/outcome approvals, rejection, invalidation, cancellation and replanning.
+- [x] Complete PostgreSQL URL APIs, secrets/URL checks, quotas and concurrent counters tested.
+- [x] Full greenfield generation: eleven production files, nine generated HTTP tests.
+- [x] Worker leases/shared locks and interrupted-build restoration tested.
+- [x] Coverage enforcement, non-root Docker/Compose, CI and six API demos implemented.
+- [x] Full-profile clean verify: 164 tests; enforced 95.69% line / 74.74% branch coverage.
+- [x] User rebuilt final-source images and started Compose successfully.
+- [x] All six final-image demos passed; exported engineering artifacts and 91 hashes inspected.
+- [x] Final-container failover passed; user reported URL state retention passed.
+- [x] PDF traceability rows reviewed; optional production hardening documented separately.
+- [ ] User returns successful git diff --check output and manually commits stage 5.
 
-## Final assessment acceptance (stage 5)
-
-- [ ] Full URL creation/redirect/aliases/409/expiry/410/inspection/deactivation/analytics APIs.
-- [ ] PostgreSQL target persistence, validation, RFC errors, OpenAPI, rate limits/Retry-After,
-      URL security, collision-safe codes, concurrency and cleanup.
-- [ ] Non-root images, two orchestrators, durable leases/recovery and failover evidence.
-- [ ] CI and enforced numeric coverage threshold.
-- [ ] Final clean Maven verification with exact totals.
-- [ ] Images rebuilt, Compose validated and six demos executed against final images.
-- [ ] Generated source/tests/diffs/manifests/logs/hashes/outcomes inspected.
-- [ ] Every PDF row checked; rubric-critical gaps fixed, optional hardening separate.
-- [ ] User-run git diff --check output returned.
-
-Current local recovery is bounded and deterministic. Passing unit tests or documentation
-alone does not establish final deployment acceptance. Shared-token identity, process
-isolation, crash-atomic batches and arbitrary-domain generation are documented limits.
+Run the commands in README and retain outputs. Do not mark final runtime acceptance
+complete from unit tests, CI configuration or documentation alone.
+All six demos passed against the final image; 91 persisted artifact hashes independently verified. Failover restored the baseline and required fresh review. User reported final-container URL retention passed; user Git whitespace recheck and manual commit remain pending.

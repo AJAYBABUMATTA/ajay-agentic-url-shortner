@@ -10,7 +10,10 @@ import org.springframework.stereotype.Component;
 public class DeterministicEngineeringProvider implements ModelProvider {
     private final IntelligenceStore store;
     private final TrustedBuildAssets assets;
-    public DeterministicEngineeringProvider(IntelligenceStore store, TrustedBuildAssets assets) { this.store=store; this.assets=assets; }
+    private final FullShortenerSources fullSources;
+    public DeterministicEngineeringProvider(IntelligenceStore store, TrustedBuildAssets assets) { this(store,assets,new FullShortenerSources(".")); }
+    @org.springframework.beans.factory.annotation.Autowired
+    public DeterministicEngineeringProvider(IntelligenceStore store, TrustedBuildAssets assets,FullShortenerSources fullSources) { this.store=store; this.assets=assets; this.fullSources=fullSources; }
     @Override public ModelResponse generate(ModelRequest request) {
         var context=request.context();
         var input=store.decode(context.inputs().get("task").content(),EngineeringModels.TaskInput.class);
@@ -18,6 +21,7 @@ public class DeterministicEngineeringProvider implements ModelProvider {
         int redirectStatus=analysis.criteria().stream().filter(c -> c.capability().equals("redirect"))
                 .anyMatch(c -> c.description().contains("301")) ? 301 : 302;
         Object output;
+        boolean full=input.task().impactedPaths().stream().anyMatch(p->p.startsWith(FullShortenerSources.ROOT) || p.startsWith(FullShortenerSources.TEST)) || input.baseline().containsKey(FullShortenerSources.ROOT+"UrlCapabilities.java") || !input.baseline().containsKey(BrownfieldSources.ROOT+"TargetApplication.java") && analysis.criteria().stream().anyMatch(c->!Set.of("create","redirect").contains(c.capability()));
         if(request.role()==AgentRole.DIAGNOSIS) {
             var failure=store.decode(context.inputs().get("failure").content(),BuildEvidence.class);
             String logs=failure.stdout()+"\n"+failure.stderr();
@@ -51,7 +55,16 @@ public class DeterministicEngineeringProvider implements ModelProvider {
                     "Repair diagnosed "+diagnosis.strategy()+" using build evidence "+context.inputs().get("failure").sha256(),context.revisionId().toString(),input.task().criterionIds(),context.taskId(),context.inputHashes())));
         } else if(request.role()==AgentRole.IMPLEMENTATION || request.role()==AgentRole.TESTING) {
             Map<String,String> files=new LinkedHashMap<>();
-            switch(input.task().key()) {
+            if(full) {
+                String capability=input.task().key().replaceFirst("^(implement|test)-","");
+                if(request.role()==AgentRole.IMPLEMENTATION) {
+                    if(capability.equals("create")) { files.putAll(assets.buildFiles()); files.putAll(fullSources.production()); }
+                    else { String path=FullShortenerSources.ROOT+"UrlCapabilities.java"; files.put(path,FullShortenerSources.enable(input.baseline().get(path),capability,redirectStatus)); }
+                } else {
+                    files.put(FullShortenerSources.testPath(capability),FullShortenerSources.test(capability,redirectStatus));
+                    if(capability.equals("create")) { files.put(FullShortenerSources.TEST+"HttpSupport.java",FullShortenerSources.HTTP_SUPPORT); files.put("src/test/resources/application-test.yaml",FullShortenerSources.TEST_CONFIG); }
+                }
+            } else switch(input.task().key()) {
                 case "implement-create" -> {
                     files.putAll(assets.buildFiles());
                     files.put(GeneratedServiceSources.ROOT+"ShortenerApplication.java",GeneratedServiceSources.APPLICATION);
@@ -79,13 +92,22 @@ public class DeterministicEngineeringProvider implements ModelProvider {
                 default -> throw new IllegalArgumentException("Unsupported engineering specialist");
             };
             boolean analytics=analysis.criteria().stream().anyMatch(c->c.capability().startsWith("analytics"));
+            if(full) {
+                analytics=false;
+                decision=switch(request.role()) {
+                    case ARCHITECTURE -> "PostgreSQL/Flyway stores links, hashed management secrets and shared rate buckets. Row locks serialize redirect counters and UTC daily aggregates. Approved capability changes enable controller/service runtime paths.";
+                    case SECURITY_RISK -> "Validate all DNS answers at creation and redirect, reject private destinations and credentials, use SecureRandom codes and hashed management tokens, and enforce shared fixed-window quotas. Redirect destinations remain subject to browser DNS changes; no destination is fetched by the platform.";
+                    case DOCUMENTATION -> "Set DB_URL, DB_USERNAME and DB_PASSWORD for PostgreSQL, then run the generated Maven Wrapper. POST /api/v1/urls; GET /{code}; GET or DELETE /api/v1/urls/{code}; GET /api/v1/urls/{code}/analytics. DELETE requires the creation response managementToken in X-Link-Token.";
+                    default -> decision;
+                };
+            }
             if(analytics && request.role()==AgentRole.ARCHITECTURE) decision="Preserve the existing UrlController -> UrlService runtime. Successful redirects call recordRedirect; concurrent per-code counters expose total and UTC-day analytics through the existing controller. Baseline tests remain part of Maven verification.";
             if(analytics && request.role()==AgentRole.SECURITY_RISK) decision="Preserve existing URL behavior and inspect collision-safe codes and concurrent analytics counters. Existing scheme-prefix validation does not establish complete host/credential/URL security; production protections remain stage 5.";
             if(analytics && request.role()==AgentRole.DOCUMENTATION) decision="Run the generated service using the platform Maven Wrapper. POST /api/v1/urls creates a code; GET /{code} redirects and increments counters. GET /api/v1/urls/{code}/analytics returns totals and UTC daily counts; optional day=YYYY-MM-DD selects one UTC day. Generated HTTP tests exercise counts, independent codes, empty counts, unknown codes and query-day behavior; the original regression test remains.";
             if(input.task().key().equals("security-review")) {
                 String production=input.baseline().entrySet().stream().filter(e->e.getKey().startsWith("src/main/java/")).map(Map.Entry::getValue).reduce("",String::concat);
                 boolean daily=analysis.criteria().stream().anyMatch(c->c.capability().equals("analytics-daily"));
-                for(String required:analytics ? (daily ? List.of("SecureRandom","putIfAbsent","recordRedirect","totalClicks","dailyClicks","Clock.systemUTC") : List.of("SecureRandom","putIfAbsent","recordRedirect","totalClicks"))
+                for(String required:full ? List.of("SecureRandom","FOR UPDATE","MessageDigest.isEqual","getHost()","getUserInfo()","Retry-After","Clock.systemUTC") : analytics ? (daily ? List.of("SecureRandom","putIfAbsent","recordRedirect","totalClicks","dailyClicks","Clock.systemUTC") : List.of("SecureRandom","putIfAbsent","recordRedirect","totalClicks"))
                         : List.of("SecureRandom","putIfAbsent","getHost()","getUserInfo()","length()>2048","https")) {
                     if(!production.contains(required)) throw new IllegalArgumentException("Generated slice lacks required security control: "+required);
                 }
@@ -97,7 +119,7 @@ public class DeterministicEngineeringProvider implements ModelProvider {
                 decision+=" Verified build artifact "+build.sha256()+" compiled "+result.compiledProductionPaths().size()+" production files and executed "+result.discoveredTests().size()+" tests; coverage report: "+result.coverage().reportLocation();
             }
             output=new EngineeringModels.Decision(decision,input.task().criterionIds(),context.inputHashes(),
-                    List.of("In-memory storage resets on restart", "Aliases, expiry, rate limits and complete production URL security remain stage 5", "Release authorization does not deploy the generated service"));
+                    full ? List.of("Generated tests substitute deterministic DNS and H2; PostgreSQL behavior is separately verified", "Fixed-window quotas use the socket peer; trusted proxy identity and external authentication remain deployment choices", "Release authorization does not deploy the generated service") : List.of("This requested minimal or legacy fixture uses in-memory storage", "Full PostgreSQL generation requires declaring the additional URL capabilities", "Release authorization does not deploy the generated service"));
         }
         return new ModelResponse("deterministic","engineering-v1",store.encode(output),Duration.ZERO);
     }

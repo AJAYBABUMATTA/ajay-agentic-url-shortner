@@ -30,3 +30,9 @@ prefix while draining the remainder. Environment secrets and Java/Maven option h
 are excluded from child processes. Error responses omit SQL/path/parser internals.
 Read APIs/source evidence and metrics need production access controls before deployment.
 Audit is append-only through the API, not tamper-proof against database owners.
+GET /api/v1/workflows/{id}/workers exposes durable owner ID, token, phase and lease
+expiry/closure. WORKER_FAILOVER_RECOVERED audit evidence names the interrupted owner.
+Unknown interrupted builds have exit=-1, INFRASTRUCTURE classification and empty test/
+coverage evidence. This is explicitly not a compiler/test result. Prometheus Compose
+configuration scrapes both app instances; aggregate process counters as appropriate,
+and avoid summing the identical durable release-success gauge across instances.

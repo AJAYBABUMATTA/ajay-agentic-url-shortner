@@ -1,87 +1,95 @@
-# Agentic Engineering Platform
+# Agentic engineering platform
 
-A runnable agentic SDLC prototype that interprets requirements, analyzes an isolated
-repository, plans a dynamic task graph, invokes deterministic engineering agents,
-applies exact validated file proposals, compiles production, executes discovered
-HTTP tests, diagnoses failures, repairs supported defects, and requests approval of
-an immutable engineering outcome. The URL shortener demonstrates these actions.
+Java 21/Spring Boot platform that interprets requirements, analyzes repositories,
+creates a dynamic task graph, invokes deterministic engineering agents, applies exact
+validated proposals in isolated workspaces, runs real Maven builds and discovered
+HTTP tests, diagnoses supported failures, and returns persisted reviewable outcomes.
+Callers cannot complete tasks or submit implementation evidence. Plan and release
+approvals bind to exact current-revision hashes.
 
-## Run locally
+## Run with Docker Desktop
 
-Requires Java 21, Docker Desktop with Linux containers, and PowerShell. Wrapper 3.3.4
-pins Maven 3.9.11; Spring Boot 3.5.0. Preserve the password of an existing database.
-
-```powershell
-Set-Location 'C:\Users\prabh\IdeaProjects\ajay-matta\agentic-url-shortener'
-$env:DB_PASSWORD = 'your-existing-local-database-password'
-$env:AGENTIC_OPERATOR_TOKEN = 'local-review-operator-token'
-$env:AGENTIC_MAVEN_REPOSITORY = "$env:USERPROFILE\.m2\repository"
-docker compose up -d postgres
-.\mvnw.cmd "-Dmaven.repo.local=$env:USERPROFILE\.m2\repository" spring-boot:run
-```
-
-Restart the application after building new source. In another terminal, run:
+Use Linux containers. Set local-only secrets in PowerShell; use your existing database
+password when reusing an existing PostgreSQL volume.
 
 ```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\demo.ps1 greenfield
+$env:DB_PASSWORD = 'your-local-database-password'
+$env:AGENTIC_OPERATOR_TOKEN = 'your-local-review-operator-token'
+docker compose config --quiet
+docker compose build
+docker compose up -d --wait
 ```
 
-The demo prints actual workflow IDs, plan hashes, and a copyable continuation command.
-Review the persisted plan and recovery scope, then use that command with your configured
-operator token. After engineering completes, review the returned production/test
-proposals, diffs, logs, coverage and outcome. The script prints a second continuation
-command to approve or reject the exact outcome hash. It never auto-approves unseen
-plan/outcome evidence. RELEASE_READY authorizes review acceptance; it does not deploy.
+Orchestrators: http://localhost:18080 and http://localhost:18081. Swagger:
+http://localhost:18080/swagger-ui.html. Readiness: /actuator/health/readiness.
+PostgreSQL defaults to localhost:5432; set POSTGRES_PORT=55432 for a separate instance.
+Optional monitoring: docker compose --profile observability up -d prometheus;
+Prometheus is at http://localhost:19090. The two app containers run as UID 10001 with
+read-only roots, separate writable Maven caches and a shared durable workspace volume.
 
-Supported demos: greenfield, brownfield, ambiguous, repair, safe-stop. Brownfield adds
-total and UTC daily analytics to the existing UrlController/UrlService runtime and
-executes six generated HTTP cases plus the original unit test. Repair starts from an
-original fixture with a real missing bootstrap type: the compiler fails, diagnosis
-identifies that production file, the repair agent proposes its complete replacement,
-and a second real clean verify passes. Safe-stop uses an unsupported compiler defect,
-restores the baseline and produces no releasable outcome. Failover remains stage 5.
+## Review an engineering scenario
 
-## API and caller boundary
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\demo.ps1 greenfield -BaseUrl http://localhost:18080
+```
 
-| Method/path suffix under /api/v1/workflows | Inputs / result |
-|---|---|
-| POST (collection) | requirement, repositoryPath; automatic intake and planning |
-| GET /{id} | revision, task graph, analyses, attempts, audit and hashes |
-| POST /{id}/clarifications | expectedRevision, answers keyed by outstanding question IDs |
-| POST /{id}/replan | expectedRevision, reason, optional replacement requirement |
-| POST /{id}/change-approvals | expectedRevision, planHash, APPROVED/REJECTED, reason |
-| POST /{id}/release-approvals | expectedRevision, outcomeHash, APPROVED/REJECTED, reason |
-| POST /{id}/cancel, /safe-stop, /rollback | expectedRevision, reason |
-| GET /{id}/engineering | full proposals, manifests/diffs, build evidence, gates, approvals, recovery and rollback |
+The script prints a real workflow ID, plan, recovery scope and exact hash. Inspect them,
+then run its continuation with the configured operator token. Approving the plan
+starts automatic generation and verification. Inspect the returned source, tests,
+diffs, manifests, logs, coverage, risks and gates before approving or rejecting the
+exact outcome hash. Release approval records readiness; it does not deploy code.
+Use the same BaseUrl on continuations (the script's default is localhost:8080).
 
-Governed actions require X-Operator-Id and X-Operator-Token. Unknown inputs, caller
-completion/evidence and arbitrary commands are rejected. Wrong revision/hash returns
-409; missing credentials returns 401; unconfigured server token returns 503. Ambiguity
-pauses before repository access. Replanning invalidates derived evidence/approvals;
-repository inventory is reused only after exact unchanged-manifest verification.
+Other scenarios: brownfield, ambiguous, repair, safe-stop and failover. Failover
+requires the Compose pair and terminates a real active build; peer recovery restores
+the baseline and requires fresh review. SCENARIOS.md describes their evidence.
 
-Swagger: /swagger-ui.html; OpenAPI: /v3/api-docs; health probes:
-/actuator/health/liveness and /actuator/health/readiness; /actuator/prometheus.
-Configurable roots: AGENTIC_REPOSITORY_ROOT (./scenario-repositories),
-AGENTIC_WORKSPACE_ROOT (./agent-workspaces); these must be separate. Other settings:
-DB_URL, DB_USERNAME, DB_PASSWORD, PORT, AGENTIC_BUILD_ASSETS_ROOT,
-AGENTIC_MAVEN_REPOSITORY. agentic.execution.parallelism defaults to 4, bounded 1–8.
+## URL-shortener API
 
-## Verification and scope
+POST /api/v1/urls with target and optional alias/expiresAt returns 201, Location and
+managementToken. GET /{code} returns 302 with exact target Location; missing is 404,
+expired/deactivated is 410. Duplicate aliases return 409. GET /api/v1/urls/{code}
+inspects without counting. DELETE there requires X-Link-Token with the creation token.
+GET /api/v1/urls/{code}/analytics returns total and UTC daily clicks; day=YYYY-MM-DD
+selects one day. Only successful redirects count. Management tokens are stored hashed.
+
+PostgreSQL stores links, daily counts and socket-peer fixed-window rate buckets:
+default 60 requests per 60 seconds, excess 429 with Retry-After. Forwarding headers
+are ignored. HTTP(S) destinations must resolve entirely to public addresses; private,
+obfuscated, credential-bearing and unsupported-port URLs are rejected. No target is
+fetched. DNS is rechecked on redirect; browser DNS changes cannot be pinned by a
+redirect service. Expiry accepts a future timestamp within 365 days. Cleanup preserves
+code tombstones, clears targets expired over 30 days and removes daily counts over
+365 days; total counts remain retained. Additional authentication, retention and
+trusted proxy policies are deployment choices.
+
+The greenfield demo declares the complete feature set and generates a standalone
+PostgreSQL/Flyway service plus nine meaningful HTTP tests. Minimal create/redirect
+requirements generate the smaller in-memory slice; brownfield fixtures preserve their
+existing in-memory service and add real analytics paths. Unsupported repositories or
+capabilities stop safely. Deterministic agents cover this bounded domain, not arbitrary
+software requests. Generated projects require DB_URL, DB_USERNAME and DB_PASSWORD;
+their tests use H2 and deterministic DNS. Real PostgreSQL HTTP tests separately prove
+concurrency and transactions.
+
+## Verify
 
 ```powershell
 .\mvnw.cmd "-Dmaven.repo.local=$env:USERPROFILE\.m2\repository" -Ppostgres-it clean verify
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\acceptance.ps1
 ```
 
-Real PostgreSQL tests require Docker and fail when unavailable. Nested Maven builds
-execute actual generated code/tests. Reports: target/surefire-reports,
-target/failsafe-reports, target/site/jacoco and target/stage4-evidence. Latest counts
-are recorded in REVIEWER-GUIDE.md after verification. Test workspaces/databases are
-temporary; API demos retain evidence in your configured local state.
+The acceptance harness explicitly approves only disposable platform-owned fixture
+plans using an identified test operator. It exports persisted evidence to ignored
+runtime-evidence. Add -ApproveFixtureOutcomes to test all ten gates with explicitly
+recorded automated fixture decisions; these are not independent human code review.
+Ordinary demo continuations always require reviewed exact hashes. CI runs complete
+Java/PostgreSQL verification, final-source image builds and all six fixture scenarios.
+Root coverage gates are 85% lines/65% branches; generated targets enforce 80%/50%.
+No production package is excluded from coverage. See REVIEWER-GUIDE.md for measured
+results and MANUAL-ACCEPTANCE.md for final runtime acceptance status.
 
-Generation is intentionally bounded to greenfield create/301-or-302 redirect and the
-supported original brownfield total/daily analytics layout. Planning other capabilities
-does not imply available implementation. Unsupported recovery stops safely. Generated
-service state is in memory. Complete URL persistence/features/security, coverage
-threshold enforcement, app images, CI and distributed restart/failover are stage 5.
-Reference code/history was not copied; all fixture and agent code is original.
+For a local JVM, run docker compose up -d postgres, set the same database/operator
+secrets, then .\mvnw.cmd spring-boot:run (port 8080). Never submit secrets or generated
+runtime evidence to Git. Git operations and the final git diff --check belong to the
+user. No checkpoint evidence document is required.

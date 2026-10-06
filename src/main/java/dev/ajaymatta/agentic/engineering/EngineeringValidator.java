@@ -21,8 +21,8 @@ public class EngineeringValidator implements ArtifactValidator {
                 if(!paths.add(operation.path()) || !operation.taskId().equals(context.taskId()) || !operation.requirementId().equals(context.revisionId().toString())
                         || !operation.inputHashes().equals(context.inputHashes()) || !operation.criterionIds().equals(task.criterionIds())
                         || !task.impactedPaths().contains(operation.path())) throw new IllegalArgumentException("Proposal not grounded in approved task");
-                if(task.role()==AgentRole.TESTING && !operation.path().startsWith("src/test/java/")) throw new IllegalArgumentException("Test agent proposed production mutation");
-                if(task.role()==AgentRole.IMPLEMENTATION && operation.path().startsWith("src/test/java/")) throw new IllegalArgumentException("Implementation agent proposed test mutation");
+                if(task.role()==AgentRole.TESTING && !operation.path().startsWith("src/test/java/") && !operation.path().equals("src/test/resources/application-test.yaml")) throw new IllegalArgumentException("Test agent proposed production mutation");
+                if(task.role()==AgentRole.IMPLEMENTATION && operation.path().startsWith("src/test/")) throw new IllegalArgumentException("Implementation agent proposed test mutation");
             }
             if(task.role()==AgentRole.REPAIR && paths.stream().anyMatch(p->!p.startsWith("src/main/java/"))) throw new IllegalArgumentException("Repair cannot weaken tests or build configuration");
             if(task.role()!=AgentRole.REPAIR && !paths.equals(new HashSet<>(task.impactedPaths()))) throw new IllegalArgumentException("Incomplete planned file proposal");

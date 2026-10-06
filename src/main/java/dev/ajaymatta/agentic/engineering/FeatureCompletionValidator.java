@@ -25,12 +25,13 @@ public class FeatureCompletionValidator {
                 .flatMap(a->evidence.decode(a.content(),EngineeringModels.Proposal.class).operations().stream()).toList();
         List<EngineeringModels.CriterionEvidence> trace=new ArrayList<>(); boolean production=true,tests=true,connected=true;
         Set<String> expectedCases=new HashSet<>();
+        boolean full=current.containsKey(FullShortenerSources.ROOT+"UrlCapabilities.java");
         for(var criterion:analysis.criteria()) {
             var productionPaths=operations.stream().filter(o->o.criterionIds().contains(criterion.id()) && o.path().startsWith("src/main/java/")).map(FileOperation::path).distinct().sorted().toList();
             var testPaths=operations.stream().filter(o->o.criterionIds().contains(criterion.id()) && o.path().startsWith("src/test/java/")).map(FileOperation::path).distinct().sorted().toList();
             var executed=testPaths.stream().flatMap(path->build.discoveredTests().stream().filter(name->name.startsWith(path.substring("src/test/java/".length()).replace('/','.').replace(".java","")+"#"))).distinct().sorted().toList();
             production &= !productionPaths.isEmpty(); tests &= !testPaths.isEmpty() && !executed.isEmpty();
-            String expectedTest=switch(criterion.capability()) {
+            String expectedTest=full ? FullShortenerSources.test(criterion.capability(),criterion.description().contains("301") ? 301 : 302) : switch(criterion.capability()) {
                 case "create" -> GeneratedServiceSources.CREATE_TEST;
                 case "redirect" -> GeneratedServiceSources.redirectTest(criterion.description().contains("301") ? 301 : 302);
                 case "analytics-total" -> BrownfieldSources.analyticsTest(false);
@@ -38,7 +39,7 @@ public class FeatureCompletionValidator {
                 default -> null;
             };
             tests &= expectedTest!=null && testPaths.stream().anyMatch(path->expectedTest.equals(current.get(path)));
-            String testClass=switch(criterion.capability()) {
+            String testClass=full ? "dev.ajaymatta.generated.shortener."+FullShortenerSources.className(criterion.capability()) : switch(criterion.capability()) {
                 case "create" -> "dev.ajaymatta.generated.CreateUrlTest";
                 case "redirect" -> "dev.ajaymatta.generated.RedirectUrlTest";
                 case "analytics-total" -> "dev.ajaymatta.target.AnalyticsTotalTest";
@@ -48,8 +49,9 @@ public class FeatureCompletionValidator {
             List<String> names=criterion.capability().startsWith("analytics") ? List.of("redirectsIncrementRealAnalytics","newCodeHasNoVisitsAndOtherCodesStayIndependent","missingCodeHasNoAnalytics")
                     : criterion.capability().equals("create") ? List.of("validTargetCreatesUniqueUsableCodes","rejectsUnsupportedSchemeMissingHostAndCredentials","rejectsMissingTarget")
                     : List.of("createdCodeRedirectsToExactStoredTargetThroughHttp","unknownCodeReturns404WithoutLocation");
+            if(full) names=List.of(FullShortenerSources.caseName(criterion.capability()));
             names.forEach(name->expectedCases.add(testClass+"#"+name));
-            connected &= switch(criterion.capability()) {
+            connected &= full ? current.get(FullShortenerSources.ROOT+"UrlCapabilities.java").contains("\""+criterion.capability()+"\"") && current.getOrDefault(FullShortenerSources.ROOT+"UrlController.java","").contains("UrlCapabilities.enabled(capability)") : switch(criterion.capability()) {
                 case "create" -> current.getOrDefault(GeneratedServiceSources.ROOT+"UrlController.java","").contains("store.create(request.target())");
                 case "redirect" -> current.getOrDefault(GeneratedServiceSources.ROOT+"RedirectController.java","").contains("store.resolve(code)");
                 case "analytics-total" -> current.getOrDefault(BrownfieldSources.ROOT+"UrlController.java","").contains("service.recordRedirect(code)") && current.getOrDefault(BrownfieldSources.ROOT+"UrlController.java","").contains("service.totalClicks(code)");
@@ -90,7 +92,7 @@ public class FeatureCompletionValidator {
         boolean ready=complete && human;
         return new EngineeringModels.SliceOutcome(ready,ready ? "RELEASE_READY" : complete ? "AWAITING_EXACT_OUTCOME_APPROVAL" : "FEATURE_GATE_FAILED",view.planHash(),manifest.afterHash(),build,trace,
                 artifacts.stream().filter(a->a.type()!=EngineeringArtifact.ArtifactType.ENGINEERING_OUTCOME).map(EngineeringArtifact::sha256).toList(),
-                List.of("In-memory target state; PostgreSQL target persistence and full URL security remain stage 5", "Readiness covers declared criteria and configured prototype policies; approval does not deploy code"),
+                List.of(full ? "PostgreSQL target; deterministic generated tests use H2/DNS fixtures; separate PostgreSQL HTTP tests verify transactions and concurrency" : "Requested minimal/legacy target is in memory; full PostgreSQL generation is available for additional declared URL capabilities", "Readiness covers declared criteria and configured policies; approval does not deploy code"),
                 complete,gates,approvals,policies,evidence.view(revision).attempts(),store.recovery(revision),analysis.assumptions(),analysis.risks());
     }
     private String baselineSelector(UUID revision) {

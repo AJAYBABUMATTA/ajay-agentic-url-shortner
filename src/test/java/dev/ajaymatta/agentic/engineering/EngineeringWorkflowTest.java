@@ -21,6 +21,17 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest @AutoConfigureMockMvc @ActiveProfiles("test")
 class EngineeringWorkflowTest {
+    @AfterEach void removeUnrecognizedFixture() throws Exception { Files.deleteIfExists(temp.resolve("sources/green/Unrecognized.java")); }
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(strings={"Create URL-shortener with expiry after 24 hours","Create URL-shortener with rate limit 5 requests per client per 60 seconds"})
+    void unsupportedPolicyNeverBecomesFalseFeatureReadiness(String requirement) {
+        var plan=planned(requirement);
+        approvals.decide(plan.workflow().id(),request(plan,ChangeApprovalService.Decision.APPROVED),"reviewer");
+        engineering.process(plan.revision().id());
+        assertThat(workflows.get(plan.workflow().id()).workflow().status()).isEqualTo(WorkflowStatus.SAFE_STOPPED);
+        assertThat(store.view(plan.revision().id()).artifacts()).isEmpty();
+        assertThat(store.view(plan.revision().id()).outcome()).isNull();
+    }
     @TempDir static Path temp;
     @DynamicPropertySource static void properties(DynamicPropertyRegistry p) {
         p.add("spring.datasource.url",()->"jdbc:h2:mem:engineering-boundary;MODE=PostgreSQL;DB_CLOSE_DELAY=-1");
@@ -63,7 +74,9 @@ class EngineeringWorkflowTest {
         assertThat(store.view(plan.revision().id()).state()).isEqualTo("NOT_STARTED");
         assertThat(Files.readString(temp.resolve("sources/green/README.md"))).isEqualTo("Original fixture\n");
     }
-    @Test void unsupportedGenerationSafelyStopsWithoutApplyingFiles() {
+    @Test void unsupportedGenerationSafelyStopsWithoutApplyingFiles() throws Exception {
+        Files.createDirectories(temp.resolve("sources/green"));
+        Files.writeString(temp.resolve("sources/green/Unrecognized.java"),"class Unrecognized {}\n");
         var plan=planned("Create URL-shortener with aliases");
         approvals.decide(plan.workflow().id(),request(plan,ChangeApprovalService.Decision.APPROVED),"reviewer");
         engineering.process(plan.revision().id());

@@ -11,3 +11,8 @@ agentic:
     enabled: false
   operator:
     token: test-only-operator-token
+shortener:
+  cleanup:
+    enabled: false
+  rate-limit:
+    limit: 1000

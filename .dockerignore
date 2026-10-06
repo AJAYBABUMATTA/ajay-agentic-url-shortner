@@ -1,0 +1,10 @@
+.git
+.idea
+.codex
+.agents
+target
+agent-workspaces
+runtime-evidence
+*.log
+.env
+*.zip

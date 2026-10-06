@@ -25,12 +25,14 @@ public class DynamicPlanner {
         tasks.add(task("security-design", AgentRole.SECURITY_RISK, List.of("plan-engineering"), allCriteria, allPaths, Gate.DEPENDENCIES_SUCCEEDED, Gate.POLICY_PASSED));
         List<String> joins = new ArrayList<>();
         Map<String, List<String>> priorImpacts = new LinkedHashMap<>();
+        boolean full = repository.greenfield() && analysis.criteria().stream().anyMatch(c -> !List.of("create","redirect").contains(c.capability()));
         for (var criterion : analysis.criteria()) {
             if (!criterion.behavioral()) continue;
             String implement = "implement-" + criterion.capability();
             List<String> paths = impacts(criterion, repository);
+            if (full) paths = criterion.capability().equals("create") ? dev.ajaymatta.agentic.engineering.FullShortenerSources.productionPaths() : List.of(dev.ajaymatta.agentic.engineering.FullShortenerSources.ROOT+"UrlCapabilities.java");
             List<String> dependencies = new ArrayList<>(List.of("architecture", "security-design"));
-            priorImpacts.forEach((key, prior) -> { if (!Collections.disjoint(prior, paths)) dependencies.add(key); });
+            for (var prior : priorImpacts.entrySet()) if (!Collections.disjoint(prior.getValue(), paths)) dependencies.add(prior.getKey());
             tasks.add(task(implement, AgentRole.IMPLEMENTATION, dependencies, List.of(criterion.id()), paths, Gate.CHANGE_APPROVED, Gate.PROPOSAL_VALID));
             String test = "test-" + criterion.capability();
             List<String> testPaths = repository.greenfield() && List.of("create","redirect").contains(criterion.capability())
@@ -38,6 +40,7 @@ public class DynamicPlanner {
             if(!repository.greenfield() && supportedBrownfield(repository) && criterion.capability().startsWith("analytics-")) {
                 testPaths=List.of("src/test/java/dev/ajaymatta/target/"+(criterion.capability().equals("analytics-total") ? "AnalyticsTotalTest.java" : "AnalyticsDailyTest.java"));
             }
+            if (full) testPaths = criterion.capability().equals("create") ? List.of(dev.ajaymatta.agentic.engineering.FullShortenerSources.testPath("create"),dev.ajaymatta.agentic.engineering.FullShortenerSources.TEST+"HttpSupport.java","src/test/resources/application-test.yaml") : List.of(dev.ajaymatta.agentic.engineering.FullShortenerSources.testPath(criterion.capability()));
             tasks.add(task(test, AgentRole.TESTING, List.of(implement), List.of(criterion.id()), testPaths, Gate.DEPENDENCIES_SUCCEEDED, Gate.PROPOSAL_VALID));
             joins.add(test); priorImpacts.put(implement, paths);
         }

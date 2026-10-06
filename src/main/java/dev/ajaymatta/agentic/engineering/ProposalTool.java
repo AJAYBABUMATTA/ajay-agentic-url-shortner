@@ -76,7 +76,8 @@ public class ProposalTool implements EngineeringTool<List<FileOperation>,Enginee
         boolean allowed=relative.equals("pom.xml") || relative.equals("mvnw") || relative.equals("mvnw.cmd")
                 || relative.equals(".mvn/wrapper/maven-wrapper.properties") || relative.equals("README.md")
                 || relative.startsWith("src/main/java/") && relative.endsWith(".java")
-                || relative.startsWith("src/test/java/") && relative.endsWith(".java");
+                || relative.startsWith("src/test/java/") && relative.endsWith(".java")
+                || Set.of("src/main/resources/application.yaml","src/main/resources/db/migration/V1__shortener.sql","src/test/resources/application-test.yaml").contains(relative);
         if(!allowed) throw new IllegalArgumentException("Unsupported proposal file type or root");
         Path root=workspace.repository().toAbsolutePath().normalize(), result=root.resolve(relative).normalize();
         if(!result.startsWith(root)) throw new IllegalArgumentException("Proposal escaped workspace");

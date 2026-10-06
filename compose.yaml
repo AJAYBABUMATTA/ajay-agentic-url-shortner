@@ -1,12 +1,13 @@
 services:
   postgres:
     image: postgres:16-alpine
+    user: "70:70"
     environment:
       POSTGRES_DB: agentic
       POSTGRES_USER: agentic
       POSTGRES_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD before starting PostgreSQL}
     ports:
-      - "127.0.0.1:5432:5432"
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
     volumes:
       - platform-db:/var/lib/postgresql/data
     healthcheck:
@@ -15,5 +16,48 @@ services:
       timeout: 3s
       retries: 12
     restart: unless-stopped
+  orchestrator-a: &orchestrator
+    image: agentic-engineering-platform:local
+    build: .
+    init: true
+    environment: &platform-environment
+      DB_URL: jdbc:postgresql://postgres:5432/agentic
+      DB_USERNAME: agentic
+      DB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD}
+      AGENTIC_OPERATOR_TOKEN: ${AGENTIC_OPERATOR_TOKEN:?Set AGENTIC_OPERATOR_TOKEN}
+      AGENTIC_INSTANCE_ID: orchestrator-a
+    ports: ["127.0.0.1:18080:8080"]
+    volumes:
+      - workspaces:/var/lib/agentic/workspaces
+      - maven-a:/home/agentic/.m2
+    tmpfs: ["/tmp:rw,nosuid,size=512m,mode=1777"]
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    depends_on:
+      postgres: {condition: service_healthy}
+    restart: unless-stopped
+  orchestrator-b:
+    <<: *orchestrator
+    environment:
+      <<: *platform-environment
+      AGENTIC_INSTANCE_ID: orchestrator-b
+    ports: ["127.0.0.1:18081:8080"]
+    volumes:
+      - workspaces:/var/lib/agentic/workspaces
+      - maven-b:/home/agentic/.m2
+  prometheus:
+    image: prom/prometheus:v2.55.1
+    user: "65534:65534"
+    profiles: [observability]
+    ports: ["127.0.0.1:19090:9090"]
+    volumes: ["./prometheus.yml:/etc/prometheus/prometheus.yml:ro"]
+    read_only: true
+    tmpfs: ["/prometheus:rw,uid=65534,gid=65534"]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
 volumes:
   platform-db:
+  workspaces:
+  maven-a:
+  maven-b:

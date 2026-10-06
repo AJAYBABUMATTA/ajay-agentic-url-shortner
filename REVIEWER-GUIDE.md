@@ -23,7 +23,7 @@ that command with your configured token. Ambiguous pauses without a workspace an
 prints a clarification command. Safe-stop expects a genuine failed compiler build,
 unsupported diagnosis and verified rollback. Other scenarios expect passing real builds
 and releaseReady=false until exact outcome approval. -ReleaseDecision REJECTED restores
-baseline and retains the rejection. Final-image failover demo remains stage 5.
+baseline and retains the rejection. Final-image failover uses the Compose pair; its measured acceptance is recorded below.
 
 ```powershell
 .\mvnw.cmd "-Dmaven.repo.local=$env:USERPROFILE\.m2\repository" '-Dtest=EngineeringWorkflowTest,RecoveryPolicyTest,ProposalToolTest,MavenBuildToolTest' test
@@ -50,7 +50,7 @@ proposal contents against manifests, with zero mismatches. The HTTP/PostgreSQL f
 outcome passed all ten gates. Its actual Prometheus export is retained in
 target/stage4-evidence/postgres-metrics.prom, including release success rate 1.0.
 Reports: target/surefire-reports, target/failsafe-reports and target/site/jacoco.
-Coverage is reported; enforcement remains stage 5.
+Root verify now enforces 85% lines and 65% branches; generated verify enforces 80%/50%. Earlier percentages above are historical stage-4 results.
 
 ## Runtime evidence
 
@@ -72,11 +72,29 @@ state. Read engineering GET for full evidence; workflow GET for DAG/attempt/audi
 
 ## Assessment limits
 
-Generation supports exactly greenfield create/redirect or the original supported
-brownfield total/daily analytics fixture. Other planned capabilities safely stop.
-Known recovery fixes only supported production defects; repairs cannot weaken tests
-or alter build configuration. Generated service data is in memory. OS isolation,
-independent operator identities, full URL security/persistence/features, numeric
-coverage enforcement, CI, final images and distributed restart/failover remain stage 5.
-TRACEABILITY.md maps every PDF row to implementation/tests/evidence/commands/status.
-The user owns Git operations and final git diff --check.
+Deterministic generation supports the documented URL-shortener capabilities and original
+brownfield analytics fixtures. Unsupported requirements stop safely. Full greenfield
+services use PostgreSQL; minimal and legacy fixture variants use in-memory storage.
+Known repairs cannot weaken tests or change build configuration. Containers provide
+process isolation; stronger hostile-build sandboxing, enterprise identity, TLS, backup
+operations and deployment automation remain production hardening.
+
+## Stage 5 verified evidence
+
+Final full-profile clean verification: 140 unit tests and 24 integration tests;
+164 total, zero failures/errors/skips. JaCoCo: 1,977 covered/89 missed lines (95.69%)
+and 1,491 covered/504 missed branches (74.74%). Root enforcement is 85% lines and
+65% branches; generated builds enforce 80% lines and 50% branches. Use
+`-Ppostgres-it clean verify`; the unit-only suite does not meet the full branch gate.
+
+The user rebuilt and started the final Compose image, then passed greenfield,
+brownfield, ambiguous, repair and safe-stop. After a Windows PowerShell native-stderr
+handling fix, failover passed independently. The scripts changed; Java image content
+was unaffected. Six exported engineering outcomes contain 91 artifacts whose UTF-8
+SHA-256 hashes were independently recalculated successfully. Four fixture outcomes
+are release ready; safe-stop and failover have verified rollback and no release outcome.
+
+Full greenfield evidence includes eleven production classes, nine generated HTTP tests,
+real build logs, coverage, proposals, diffs, manifests and exact approval lineage.
+Fixture approvals use an explicitly automated test identity, not independent human review.
+Native PostgreSQL API integration tests cover concurrency and persistence; the user reported final-container URL retention passed; the user's Git whitespace recheck remains.

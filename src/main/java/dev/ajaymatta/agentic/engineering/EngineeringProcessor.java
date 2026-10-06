@@ -27,25 +27,36 @@ public class EngineeringProcessor {
     private final dev.ajaymatta.agentic.repository.RepositoryTools repositories;
     private final boolean enabled;
     private final int parallelism;
+    private final WorkerLeases leases;
     public EngineeringProcessor(EngineeringStore store,IntelligenceStore evidence,WorkflowRepository workflows,EngineeringExecutor executor,
             ProposalTool patches,JdbcTemplate jdbc,ExecutionControlService control,RecoveryPolicy recovery,EngineeringMetrics metrics,dev.ajaymatta.agentic.repository.RepositoryTools repositories,
-            @Value("${agentic.processing.enabled:true}") boolean enabled,@Value("${agentic.execution.parallelism:4}") int parallelism) {
+            @Value("${agentic.processing.enabled:true}") boolean enabled,@Value("${agentic.execution.parallelism:4}") int parallelism,WorkerLeases leases) {
         this.store=store; this.evidence=evidence; this.workflows=workflows; this.executor=executor; this.patches=patches; this.jdbc=jdbc;
         this.control=control; this.recovery=recovery; this.metrics=metrics; this.repositories=repositories; this.enabled=enabled; this.parallelism=Math.max(1,Math.min(8,parallelism));
+        this.leases=leases;
     }
     @Scheduled(fixedDelayString="${agentic.processing.poll-ms:500}")
     public void poll() { if(enabled) for(var revision:store.queued()) process(revision); }
     public void process(UUID revisionId) {
-        if(!store.claim(revisionId)) return;
         UUID workflowId=jdbc.queryForObject("SELECT workflow_id FROM workflow_revisions WHERE id=?",UUID.class,revisionId);
         var revision=workflows.revision(workflowId,workflows.find(workflowId).orElseThrow().currentRevision());
+        var ownership=leases.acquire(workflowId,revisionId,"ENGINEERING",false);
+        if(ownership.isEmpty()) return;
+        try(var lease=ownership.get()) {
         try(var pool=Executors.newFixedThreadPool(parallelism)) {
+            if(!store.claim(revisionId)) return;
             if(!revision.id().equals(revisionId)) throw new IllegalStateException("Stale execution revision");
             var analysis=evidence.view(revisionId);
             var workspace=store.workspace(revisionId);
             var baseline=patches.read(workspace);
             var capabilities=new HashSet<>(analysis.requirement().criteria().stream().map(RequirementAnalysis.Criterion::capability).toList());
-            boolean green=analysis.repository().greenfield() && capabilities.equals(Set.of("create","redirect")) && baseline.keySet().stream().allMatch(p->p.endsWith(".md"));
+            boolean green=analysis.repository().greenfield() && FullShortenerSources.CAPABILITIES.containsAll(capabilities) && capabilities.containsAll(Set.of("create","redirect")) && baseline.keySet().stream().allMatch(p->p.endsWith(".md"));
+            // A resolved policy can still exceed this deterministic executor's supported scope.
+            // Never substitute caller timestamps or default quotas for a different requested policy.
+            boolean supportedPolicies=analysis.requirement().criteria().stream().allMatch(c ->
+                    !c.capability().equals("expiry") || c.description().toLowerCase(Locale.ROOT).contains("expiresat") || c.description().toLowerCase(Locale.ROOT).contains("expiry timestamp"));
+            if(capabilities.contains("rate-limit")) supportedPolicies &= analysis.requirement().normalizedProblem().toLowerCase(Locale.ROOT).matches("(?s).*rate limit 60 requests? per (client|ip) per 60 seconds?.*");
+            green &= supportedPolicies;
             boolean brown=!analysis.repository().greenfield() && !capabilities.isEmpty() && Set.of("analytics-total","analytics-daily").containsAll(capabilities)
                     && capabilities.contains("analytics-total") && baseline.containsKey(BrownfieldSources.ROOT+"TargetApplication.java");
             if(!analysis.requirement().resolved() || !green && !brown || analysis.plan().recoveryScope()==null) throw new IllegalArgumentException("Requirement/repository capability requires human intervention and replanning");
@@ -80,6 +91,7 @@ public class EngineeringProcessor {
             String reason="SAFE_STOP: "+failure.getClass().getSimpleName();
             store.policy(revisionId,revision.requirementHash(),false,reason);
             control.stop(revision,store.cancelled(revisionId) ? WorkflowStatus.CANCELLED : WorkflowStatus.SAFE_STOPPED,reason);
+        }
         }
     }
     private void run(WorkflowRevision revision,EngineeringPlan.PlannedTask planned,Map<String,String> baseline) {

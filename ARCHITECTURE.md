@@ -80,4 +80,8 @@ trusted local assessment execution. File writes are atomic individually; batches
 restored on handled failure, not crash-atomic. Baseline restoration excludes Maven build
 output, which may remain for diagnosis and is never release-authorizing evidence.
 Shared-token operators are a local boundary, not independent enterprise identities.
-Generated data is in memory; production URL hardening/deployment remain stage 5.
+Minimal and legacy fixtures retain in-memory data; complete greenfield generation uses PostgreSQL, Flyway, capability-governed HTTP paths and nine generated HTTP tests. Native PostgreSQL tests establish transactional counters and alias contention. Deployment acceptance is recorded separately.
+
+## Complete URL capability generation
+
+FullShortenerSources reads only original platform-owned source. A complete greenfield plan creates eleven Java production files, pinned build assets and Flyway/configuration resources. Subsequent criterion tasks update the shared UrlCapabilities gate, so they serialize on optimistic predecessor hashes. Each capability has an independently generated HTTP test; testing creates deterministic DNS/H2 support. Policy validation permits only the declared Java/configuration/migration paths. Full and minimal POMs are exact platform-controlled capabilities, never agent command text. Root and generated JaCoCo checks fail verification below documented numeric thresholds.
