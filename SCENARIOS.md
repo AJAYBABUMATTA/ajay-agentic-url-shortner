@@ -1,28 +1,34 @@
 # Scenarios
 
-Run scripts/check-intelligence.ps1 against the current PostgreSQL-backed application.
-It performs API-driven submission, polling and authenticated revision updates.
+All demos use the API and print real persisted evidence. Start the latest application
+from README. Run scripts/demo.ps1 with a scenario, review its printed plan, continue
+with the exact WorkflowId/ApprovedPlanHash, then review its exact outcome before the
+optional ApprovedOutcomeHash continuation. Replace only the configured token in the
+printed commands; actual IDs/hashes are included automatically.
 
-| Scenario | Current evidence | Remaining engineering proof |
-|---|---|---|
-| Greenfield | Automatic criteria/plan; exact-plan approval; generated create/redirect runtime; real child build and HTTP tests | Full feature gate, release governance and production hardening |
-| Brownfield | Actual controller/service reference map and criterion-specific impacts | Enhancement of connected redirect/analytics runtime path |
-| Ambiguous | No repository/workspace stage; authenticated expiry clarification creates child revision | Integration with complete engineering execution |
-| Replanning | Requirement change invalidates derived artifacts; unchanged verified inventory reused | Execution-stage recovery/replanning after downstream failure |
-| Repository failure | Unsafe/unavailable input enters SAFE_STOPPED | Governed rollback/retry policies |
+| Scenario | Requirement and evidence |
+|---|---|
+| greenfield | Markdown baseline; four compiled production files, five generated HTTP tests; requested 301/302; exact outcome release gate |
+| brownfield | Existing UrlController -> UrlService; total and UTC daily/query-day analytics; three production files compiled, six generated HTTP tests and one retained unit test |
+| ambiguous | Conflicting 301/302 pauses without workspace; -WorkflowId and -Clarification 301/302 creates authenticated child revision, then full engineering |
+| repair | Original fixture has MissingApplication.class; genuine compiler failure, diagnosis, scoped bootstrap UPDATE, second clean verify; seven executed tests |
+| safe-stop | Original fixture has unsupported UnknownApplication.class; real compiler failure, unsupported diagnosis, fallback and verified baseline restoration; no releasable outcome |
 
-Automated tests also change upstream repository source and prove inventory reuse
-is rejected when the manifest changes. No human provides node output or completion.
-Scripts print real persisted IDs, criteria, graphs, hashes and attempts.
+For release rejection, use -ReleaseDecision REJECTED with the printed exact outcome
+hash. Inspect the returned rejection and restored manifest. Authenticated cancel,
+safe-stop and rollback endpoints accept expectedRevision and reason. Cancellation
+during actual Maven verification is tested; it kills the child before restoring files.
 
-check-foundation.ps1 still verifies the caller boundary while allowing automatic
-analysis progress. check-intelligence.ps1 verifies the complete planning stage.
-demo.ps1 greenfield now performs plan inspection and a second invocation with exact
-hash approval, then prints persisted generated build/outcome evidence. Other demo
-scenarios arrive with their implementations and final-image acceptance.
-Repair, release approval rejection, durable baseline restoration and two-worker failover
-are not implemented or demonstrated yet.
+RecoveryGovernanceIT also injects an incorrect 418 into production only: unchanged
+HTTP tests genuinely fail, diagnosis repairs production status, and real verification
+passes. Another test keeps the production compiler defect through two repair proposals
+and proves the third failed build stops. Fault injection exists only in test providers;
+public callers cannot submit faulty outputs or completion text.
 
-GeneratedSliceIT runs genuine child compiler and HTTP-test failures via test-only
-provider fault injection; the process is real. Both persist failure evidence and
-SAFE_STOPPED without a successful outcome. These tests do not claim automatic repair.
+Upstream changes invalidate candidate release evidence. Authenticated /replan creates
+a fresh requirement-specific revision and invalidates derived artifacts/approvals;
+changed source prevents repository-map reuse. Existing intelligence tests additionally
+cover unchanged-manifest reuse and graph variation/cycles.
+
+Failover demo and all demos against final Docker images belong to stage 5. Current
+local demos do not claim distributed crash recovery or production readiness.

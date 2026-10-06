@@ -1,25 +1,31 @@
 # Engineering outcomes
 
-Current workflows produce reviewable requirement, ambiguity, repository inventory
-and dynamic plan artifacts with persisted attempt/hash lineage. After exact plan
-approval, a supported greenfield create/redirect workflow generates source/tests,
-applies them in its isolated workspace and runs Maven verification. A passing slice
-persists VERIFIED_VERTICAL_SLICE_RELEASE_GATED with releaseReady=false and enters
-AWAITING_RELEASE_APPROVAL. No release approval endpoint is exposed in this stage.
+The platform returns persisted engineering evidence, not caller-supplied completion.
+A supported execution produces requirement criteria/assumptions/risks, repository and
+architecture rationale, a dynamic plan/recovery scope, exact proposals/diffs/manifests,
+real build/test/coverage reports, validation/policy decisions, attempts, documentation
+and security limitations. Each artifact binds revision/task/input hashes.
 
-Clarification creates a child revision. Requirement-dependent evidence/approvals are
-invalidated; unchanged repository inventory is reused only after current manifest
-verification. Inspection exposes original/current revision links and reuse IDs.
+A candidate outcome has featureComplete=true only when the first nine gates pass;
+releaseReady remains false until an authenticated human approves its exact current
+hash. Final outcome closes all ten gates and includes criterion-to-production/test
+traceability, current manifest/plan/artifact hashes, approvals, policies, attempts,
+recovery, assumptions, risks and explicit limits. Its input lineage includes the
+immutable approved candidate and approval identity. Approval means engineering review
+acceptance; the platform does not deploy generated code.
 
-The current bounded outcome contains generated production/test criterion mappings,
-compiled paths, executed/failed test cases, coverage, plan/current manifest hashes
-and artifact hashes. Companion artifacts contain architecture rationale, exact file
-operations, manifests/diffs, build logs, documentation/security limitations and input
-lineage. Build failures persist evidence and stop without a successful outcome.
-The complete final outcome still needs diagnosis/repair/recovery evidence, complete
-feature/security gates and authenticated exact-outcome release approval.
+Compiler/test failures retain failed attempts and real evidence. Supported diagnosis
+produces a production-only repair proposal followed by another actual verification.
+Unsupported recovery/exhaustion/cancellation restores baseline, records verified hashes
+and invalidates outcomes/release approvals. Failure never creates false readiness.
+Rejected outcome decisions remain inspectable. Historical rows remain in the database;
+current API views exclude invalidated artifacts and approved release decisions.
 
-Every behavioral criterion must connect to actual runtime production behavior and
-meaningful generated tests. Passing unrelated tests, schemas, narrative output or
-zero exit codes without feature evidence cannot establish readiness. Supported
-planning capabilities do not imply implemented generation/repair capabilities.
+Upstream or workspace drift cannot reuse old release evidence. Replanning creates a
+child revision, invalidates derived evidence/approvals and verifies repository inventory
+before reuse. Older stage outcomes lacking the current gates require replanning.
+
+Deterministic capabilities are bounded: greenfield create/redirect and the original
+brownfield total/daily analytics fixture. Unsupported intent stops or asks clarification.
+Generated state remains in memory; full target persistence, URL features/security,
+coverage enforcement and distributed failover remain stage 5.

@@ -86,6 +86,17 @@ class EngineeringWorkflowTest {
         assertThat(output.proposals()).allMatch(o->o.taskId().equals(id) && o.criterionIds().equals(List.of("AC-CREATE")) && o.inputHashes().equals(context.inputHashes()));
         new EngineeringValidator(evidence).validate(output.artifacts().getFirst(),context);
     }
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(strings={"cancel","safe-stop","rollback","release-approvals"})
+    void governanceActionsRequireAuthenticatedOperatorAndCurrentRevision(String action) throws Exception {
+        var plan=planned("Create URL-shortener");
+        String body=action.equals("release-approvals") ? evidence.encode(new ReleaseApprovalService.Request(2,Hashes.sha256("outcome"),ChangeApprovalService.Decision.APPROVED,"Reviewed"))
+                : evidence.encode(new ExecutionControlService.Request(2,"Reviewed stop"));
+        String uri="/api/v1/workflows/"+plan.workflow().id()+"/"+action;
+        mvc.perform(post(uri).contentType(MediaType.APPLICATION_JSON).content(body)).andExpect(status().isUnauthorized());
+        mvc.perform(post(uri).header("X-Operator-Id","reviewer").header("X-Operator-Token","test-only-operator-token").contentType(MediaType.APPLICATION_JSON).content(body)).andExpect(status().isConflict());
+        assertThat(workflows.get(plan.workflow().id()).workflow().status()).isEqualTo(WorkflowStatus.AWAITING_CHANGE_APPROVAL);
+    }
     private WorkflowDetails planned(String requirement) {
         var result=workflows.submit(new SubmitRequirement(requirement,"green")); intelligence.process(result.workflow().id()); return workflows.get(result.workflow().id());
     }

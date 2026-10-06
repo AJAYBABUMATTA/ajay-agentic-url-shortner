@@ -1,0 +1,1 @@
+Original repair fixture. TargetApplication intentionally references MissingApplication.class. The platform must persist the genuine compiler failure, diagnose and propose a scoped production replacement, then run a second real Maven verification. The source fixture remains unchanged.

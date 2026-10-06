@@ -84,6 +84,11 @@ public class RepositoryTools {
             throw new RepositoryPolicyException("Repository snapshot failed safely", exception);
         }
     }
+    public String currentManifest(String selector) {
+        validateSelector(selector);
+        try { return dev.ajaymatta.agentic.engineering.ProposalTool.manifest(readTree(approvedRoot.resolve(selector))); }
+        catch(IOException failure) { throw new RepositoryPolicyException("Cannot inspect current repository",failure); }
+    }
 
     public Map<String, String> readTree(Path repository) throws IOException {
         Path base = repository.toAbsolutePath().normalize();

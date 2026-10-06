@@ -35,6 +35,9 @@ public class DynamicPlanner {
             String test = "test-" + criterion.capability();
             List<String> testPaths = repository.greenfield() && List.of("create","redirect").contains(criterion.capability())
                     ? List.of("src/test/java/dev/ajaymatta/generated/" + (criterion.capability().equals("create") ? "CreateUrlTest.java" : "RedirectUrlTest.java")) : paths;
+            if(!repository.greenfield() && supportedBrownfield(repository) && criterion.capability().startsWith("analytics-")) {
+                testPaths=List.of("src/test/java/dev/ajaymatta/target/"+(criterion.capability().equals("analytics-total") ? "AnalyticsTotalTest.java" : "AnalyticsDailyTest.java"));
+            }
             tasks.add(task(test, AgentRole.TESTING, List.of(implement), List.of(criterion.id()), testPaths, Gate.DEPENDENCIES_SUCCEEDED, Gate.PROPOSAL_VALID));
             joins.add(test); priorImpacts.put(implement, paths);
         }
@@ -47,7 +50,10 @@ public class DynamicPlanner {
         return new EngineeringPlan(revisionId, requirementHash, repository.manifestHash(), tasks, validator.validate(tasks),
                 List.of(repository.greenfield() ? "Generate an original service from an empty source baseline" : "Enhance existing runtime components and preserve regression behavior",
                         "Serialize overlapping production proposals; synchronize all test branches before application",
-                        "High-impact source application requires exact plan approval; release requires exact outcome approval"));
+                        "High-impact source application requires exact plan approval; release requires exact outcome approval",
+                        "At most three build attempts; evidence-driven production-only repairs within declared scope; unsupported failures restore baseline and stop"),
+                new EngineeringPlan.RecoveryScope(3,java.util.stream.Stream.concat(allPaths.stream(),tasks.stream().flatMap(t->t.impactedPaths().stream()))
+                        .filter(p->p.startsWith("src/main/java/") && p.endsWith(".java")).distinct().sorted().toList(),"RESTORE_BASELINE_AND_SAFE_STOP"));
     }
 
     private List<String> impacts(RequirementAnalysis.Criterion criterion, RepositoryMap repository) {
@@ -61,10 +67,19 @@ public class DynamicPlanner {
                     : "UrlService";
             return List.of("src/main/java/dev/ajaymatta/target/" + type + ".java");
         }
+        if(supportedBrownfield(repository) && criterion.capability().startsWith("analytics-")) {
+            var paths=new ArrayList<>(List.of("src/main/java/dev/ajaymatta/target/UrlService.java","src/main/java/dev/ajaymatta/target/UrlController.java"));
+            if(criterion.capability().equals("analytics-total")) paths.addAll(List.of("pom.xml","mvnw","mvnw.cmd",".mvn/wrapper/maven-wrapper.properties"));
+            return List.copyOf(paths);
+        }
         List<String> result = repository.components().stream()
                 .filter(c -> List.of("controller", "service", "repository", "domain").contains(c.kind()))
                 .map(RepositoryMap.Component::path).toList();
         return result.isEmpty() ? repository.components().stream().map(RepositoryMap.Component::path).toList() : result;
+    }
+    private boolean supportedBrownfield(RepositoryMap repository) {
+        return repository.components().stream().map(RepositoryMap.Component::path).toList().containsAll(List.of(
+                "src/main/java/dev/ajaymatta/target/UrlService.java","src/main/java/dev/ajaymatta/target/UrlController.java","src/main/java/dev/ajaymatta/target/TargetApplication.java"));
     }
     private EngineeringPlan.PlannedTask task(String key, AgentRole role, List<String> dependencies, List<String> criteria,
             List<String> paths, Gate entry, Gate exit) {

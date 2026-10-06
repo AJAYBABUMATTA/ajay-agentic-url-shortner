@@ -1,35 +1,15 @@
 # Agentic Engineering Platform
 
-A governed engineering platform demonstrated through an original URL-shortener
-repository. Requirement interpretation, ambiguity handling, repository reasoning,
-revision lineage and dynamic planning execute automatically. After exact plan approval,
-a bounded greenfield create/redirect requirement generates production and HTTP tests,
-applies validated proposals and runs real Maven verification. Repair and release
-approval remain later stages.
+A runnable agentic SDLC prototype that interprets requirements, analyzes an isolated
+repository, plans a dynamic task graph, invokes deterministic engineering agents,
+applies exact validated file proposals, compiles production, executes discovered
+HTTP tests, diagnoses failures, repairs supported defects, and requests approval of
+an immutable engineering outcome. The URL shortener demonstrates these actions.
 
-## Current behavior
+## Run locally
 
-POST a requirement and relative repository selector. A durable intake worker invokes
-four deterministic analysis agents, records attempts and hash-bound artifacts, and:
-
-- Pauses ambiguous requirements in AWAITING_CLARIFICATION without creating a workspace.
-- Snapshots clear requirements into an isolated revision workspace, analyzes actual
-  source types/routes/data-flow candidates, derives criterion-specific dependencies,
-  and stops at AWAITING_CHANGE_APPROVAL.
-- Creates child revisions for authenticated clarification/replanning, invalidates
-  requirement-derived evidence and approvals, and reuses repository inventory only
-  after an unchanged baseline manifest is verified.
-
-Authenticated CHANGE approval binds the exact current plan hash and queues automatic
-engineering execution. executionEnabled/sourceMutationAllowed are true only while
-the workflow is EXECUTING; mutation is limited to its isolated workspace. A successful
-slice enters AWAITING_RELEASE_APPROVAL with releaseReady=false. Release approval is
-not exposed yet. Unsupported generators or failed builds enter SAFE_STOPPED.
-
-## Setup
-
-Requires JDK 21, Docker Desktop (Linux containers), and PowerShell. Maven Wrapper
-3.3.4 pins Maven 3.9.11. Spring Boot is pinned at 3.5.0.
+Requires Java 21, Docker Desktop with Linux containers, and PowerShell. Wrapper 3.3.4
+pins Maven 3.9.11; Spring Boot 3.5.0. Preserve the password of an existing database.
 
 ```powershell
 Set-Location 'C:\Users\prabh\IdeaProjects\ajay-matta\agentic-url-shortener'
@@ -40,86 +20,68 @@ docker compose up -d postgres
 .\mvnw.cmd "-Dmaven.repo.local=$env:USERPROFILE\.m2\repository" spring-boot:run
 ```
 
-Use the password that initialized the existing database. Operator tokens are
-configured explicitly; no default authorization secret exists. Environment settings:
-DB_URL, DB_USERNAME, DB_PASSWORD, PORT, AGENTIC_OPERATOR_TOKEN,
-AGENTIC_REPOSITORY_ROOT (default ./scenario-repositories), and AGENTIC_WORKSPACE_ROOT
-(default ./agent-workspaces). Database/workspace roots must be distinct.
-
-In another terminal:
-
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\check-intelligence.ps1 -OperatorToken 'local-review-operator-token'
-```
-
-Expected: automatic greenfield/brownfield plans, authenticated ambiguity revision,
-evidence invalidation, verified inventory reuse, and blocked engineering mutation.
-The script prints persisted graph, repository reasoning, attempts and hashes.
-
-## API
-
-| Method/path | Caller inputs | Result |
-|---|---|---|
-| POST /api/v1/workflows | requirement, repositoryPath | HTTP 202 intake; worker automatically interprets/plans |
-| GET /api/v1/workflows/{id} | workflow ID | Current revision, graph, audit, analyses, artifact hashes and attempts |
-| POST /api/v1/workflows/{id}/clarifications | expectedRevision, answers keyed by question IDs | Authenticated child revision; stale revision returns 409 |
-| POST /api/v1/workflows/{id}/replan | expectedRevision, reason, optional replacement requirement | Authenticated new revision and automatic fresh planning |
-| POST /api/v1/workflows/{id}/change-approvals | expectedRevision, planHash, decision, reason | Authenticated exact-plan approval queues execution; rejection safely stops |
-| GET /api/v1/workflows/{id}/engineering | workflow ID | Full proposals, diffs, manifests, build logs, coverage and bounded slice outcome |
-
-Clarification/replanning/change approval require X-Operator-Id and X-Operator-Token. Absent/wrong
-credentials return 401 when configured; missing server authorization configuration
-returns 503. Unknown fields, duplicate keys, scalar coercions and manual completion
-are rejected. No caller can supply tasks, file proposals, validation or success state.
-
-Supported offline capabilities: create, redirect, aliases, expiry, inspection,
-deactivation, total/UTC daily analytics, rate-limit policies and measurable
-performance targets. Planning a capability does not establish an implemented
-engineering agent for it. Unknown domains, vague intent, missing units/windows or
-conflicting policies require clarification; unsupported generation must safely stop.
-
-Swagger /swagger-ui.html; OpenAPI /v3/api-docs; health /actuator/health/liveness and
-/actuator/health/readiness; baseline metrics /actuator/prometheus.
-
-## Verification
-
-```powershell
-.\mvnw.cmd "-Dmaven.repo.local=$env:USERPROFILE\.m2\repository" '-Dtest=RequirementInterpreterTest,RepositoryToolsTest,DynamicPlannerTest,IntelligenceWorkflowTest,ScheduledIntelligenceTest' test
-.\mvnw.cmd "-Dmaven.repo.local=$env:USERPROFILE\.m2\repository" -Ppostgres-it clean verify
-```
-
-H2 is test-only; PostgreSQL profile adds six real database checks, three nested
-Maven engineering checks (success, compiler failure, HTTP-test failure), and an
-HTTP-only automatic execution scenario on PostgreSQL. Verification fails when
-Docker is unavailable. Reports: target/surefire-reports, target/failsafe-reports,
-and target/site/jacoco/index.html. Coverage is reported; threshold enforcement is
-pending. Current verified results and remaining checks are in REVIEWER-GUIDE.md.
-
-Reference code/history was not copied. The Windows wrapper has a null-safe directory
-metadata lookup adjustment. No external model or model-provided command is used.
-
-## Generated greenfield service
-
-Generation supports a Markdown-only baseline and exactly create/redirect criteria.
-The original source fixture is unchanged. Ten generated files include an executable
-Spring Boot service, platform-owned Maven build assets and two HTTP-test classes.
-The requested redirect status (301 or 302) is reflected in production and tests.
-
-Run the demo once to inspect the persisted plan:
+Restart the application after building new source. In another terminal, run:
 
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\demo.ps1 greenfield
 ```
 
-Review the printed plan, then approve its exact values:
+The demo prints actual workflow IDs, plan hashes, and a copyable continuation command.
+Review the persisted plan and recovery scope, then use that command with your configured
+operator token. After engineering completes, review the returned production/test
+proposals, diffs, logs, coverage and outcome. The script prints a second continuation
+command to approve or reject the exact outcome hash. It never auto-approves unseen
+plan/outcome evidence. RELEASE_READY authorizes review acceptance; it does not deploy.
+
+Supported demos: greenfield, brownfield, ambiguous, repair, safe-stop. Brownfield adds
+total and UTC daily analytics to the existing UrlController/UrlService runtime and
+executes six generated HTTP cases plus the original unit test. Repair starts from an
+original fixture with a real missing bootstrap type: the compiler fails, diagnosis
+identifies that production file, the repair agent proposes its complete replacement,
+and a second real clean verify passes. Safe-stop uses an unsupported compiler defect,
+restores the baseline and produces no releasable outcome. Failover remains stage 5.
+
+## API and caller boundary
+
+| Method/path suffix under /api/v1/workflows | Inputs / result |
+|---|---|
+| POST (collection) | requirement, repositoryPath; automatic intake and planning |
+| GET /{id} | revision, task graph, analyses, attempts, audit and hashes |
+| POST /{id}/clarifications | expectedRevision, answers keyed by outstanding question IDs |
+| POST /{id}/replan | expectedRevision, reason, optional replacement requirement |
+| POST /{id}/change-approvals | expectedRevision, planHash, APPROVED/REJECTED, reason |
+| POST /{id}/release-approvals | expectedRevision, outcomeHash, APPROVED/REJECTED, reason |
+| POST /{id}/cancel, /safe-stop, /rollback | expectedRevision, reason |
+| GET /{id}/engineering | full proposals, manifests/diffs, build evidence, gates, approvals, recovery and rollback |
+
+Governed actions require X-Operator-Id and X-Operator-Token. Unknown inputs, caller
+completion/evidence and arbitrary commands are rejected. Wrong revision/hash returns
+409; missing credentials returns 401; unconfigured server token returns 503. Ambiguity
+pauses before repository access. Replanning invalidates derived evidence/approvals;
+repository inventory is reused only after exact unchanged-manifest verification.
+
+Swagger: /swagger-ui.html; OpenAPI: /v3/api-docs; health probes:
+/actuator/health/liveness and /actuator/health/readiness; /actuator/prometheus.
+Configurable roots: AGENTIC_REPOSITORY_ROOT (./scenario-repositories),
+AGENTIC_WORKSPACE_ROOT (./agent-workspaces); these must be separate. Other settings:
+DB_URL, DB_USERNAME, DB_PASSWORD, PORT, AGENTIC_BUILD_ASSETS_ROOT,
+AGENTIC_MAVEN_REPOSITORY. agentic.execution.parallelism defaults to 4, bounded 1–8.
+
+## Verification and scope
 
 ```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\demo.ps1 greenfield -WorkflowId '<printed-id>' -ApprovedPlanHash '<printed-hash>' -OperatorToken 'local-review-operator-token'
+.\mvnw.cmd "-Dmaven.repo.local=$env:USERPROFILE\.m2\repository" -Ppostgres-it clean verify
 ```
 
-Expected: four compiled production files, five executed HTTP tests, persisted line
-coverage and criterion traceability, and releaseReady=false. Full contents/logs are
-available through GET /api/v1/workflows/{id}/engineering. Generated service storage
-is in memory; persistence, aliases, expiry, analytics, rate limits and production
-security are pending. Failed child builds persist their classification and stop;
-automatic repair/retry and whole-workflow rollback are planned for the next stage.
+Real PostgreSQL tests require Docker and fail when unavailable. Nested Maven builds
+execute actual generated code/tests. Reports: target/surefire-reports,
+target/failsafe-reports, target/site/jacoco and target/stage4-evidence. Latest counts
+are recorded in REVIEWER-GUIDE.md after verification. Test workspaces/databases are
+temporary; API demos retain evidence in your configured local state.
+
+Generation is intentionally bounded to greenfield create/301-or-302 redirect and the
+supported original brownfield total/daily analytics layout. Planning other capabilities
+does not imply available implementation. Unsupported recovery stops safely. Generated
+service state is in memory. Complete URL persistence/features/security, coverage
+threshold enforcement, app images, CI and distributed restart/failover are stage 5.
+Reference code/history was not copied; all fixture and agent code is original.

@@ -8,12 +8,15 @@ import java.util.UUID;
 
 public record EngineeringPlan(UUID revisionId, String requirementHash, String repositoryHash,
                               List<PlannedTask> tasks, Map<String, List<String>> executionLayers,
-                              List<String> decisions) {
+                              List<String> decisions, RecoveryScope recoveryScope) {
     public EngineeringPlan {
         tasks = List.copyOf(tasks);
         var layers = new java.util.TreeMap<String, List<String>>();
         executionLayers.forEach((key, value) -> layers.put(key, List.copyOf(value)));
         executionLayers = java.util.Collections.unmodifiableMap(layers); decisions = List.copyOf(decisions);
+    }
+    public record RecoveryScope(int maximumBuildAttempts,List<String> productionPaths,String fallback) {
+        public RecoveryScope { productionPaths=List.copyOf(productionPaths); }
     }
     public record PlannedTask(String key, AgentRole role, List<String> dependencies, List<String> criterionIds,
                               List<String> impactedPaths, List<Gate> entryGates, List<Gate> exitGates) {

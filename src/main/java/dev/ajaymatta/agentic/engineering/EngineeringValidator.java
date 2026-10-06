@@ -24,7 +24,13 @@ public class EngineeringValidator implements ArtifactValidator {
                 if(task.role()==AgentRole.TESTING && !operation.path().startsWith("src/test/java/")) throw new IllegalArgumentException("Test agent proposed production mutation");
                 if(task.role()==AgentRole.IMPLEMENTATION && operation.path().startsWith("src/test/java/")) throw new IllegalArgumentException("Implementation agent proposed test mutation");
             }
-            if(!paths.equals(new HashSet<>(task.impactedPaths()))) throw new IllegalArgumentException("Incomplete planned file proposal");
+            if(task.role()==AgentRole.REPAIR && paths.stream().anyMatch(p->!p.startsWith("src/main/java/"))) throw new IllegalArgumentException("Repair cannot weaken tests or build configuration");
+            if(task.role()!=AgentRole.REPAIR && !paths.equals(new HashSet<>(task.impactedPaths()))) throw new IllegalArgumentException("Incomplete planned file proposal");
+        } else if(artifact.type()==EngineeringArtifact.ArtifactType.DIAGNOSIS) {
+            var diagnosis=evidence.decode(artifact.content(),EngineeringModels.Diagnosis.class);
+            var failure=evidence.decode(context.inputs().get("failure").content(),BuildEvidence.class);
+            if(diagnosis.classification()!=failure.classification() || !diagnosis.failedTests().equals(failure.failedTests())
+                    || !task.impactedPaths().containsAll(diagnosis.affectedPaths())) throw new IllegalArgumentException("Diagnosis lacks scoped failure evidence");
         } else if(List.of(EngineeringArtifact.ArtifactType.ARCHITECTURE,EngineeringArtifact.ArtifactType.DOCUMENTATION,EngineeringArtifact.ArtifactType.SECURITY_REVIEW).contains(artifact.type())) {
             var decision=evidence.decode(artifact.content(),EngineeringModels.Decision.class);
             if(decision.decision()==null || decision.decision().isBlank() || !decision.criterionIds().equals(task.criterionIds())

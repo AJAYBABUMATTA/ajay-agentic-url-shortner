@@ -13,7 +13,8 @@ public class EngineeringAgent implements Agent {
     @Override public AgentOutput execute(ExecutionContext context) {
         var response=provider.generate(new ModelProvider.ModelRequest(role,"1.0",context));
         var type=switch(role) {
-            case IMPLEMENTATION, TESTING -> EngineeringArtifact.ArtifactType.FILE_PROPOSAL;
+            case IMPLEMENTATION, TESTING, REPAIR -> EngineeringArtifact.ArtifactType.FILE_PROPOSAL;
+            case DIAGNOSIS -> EngineeringArtifact.ArtifactType.DIAGNOSIS;
             case ARCHITECTURE -> EngineeringArtifact.ArtifactType.ARCHITECTURE;
             case SECURITY_RISK -> EngineeringArtifact.ArtifactType.SECURITY_REVIEW;
             case DOCUMENTATION -> EngineeringArtifact.ArtifactType.DOCUMENTATION;

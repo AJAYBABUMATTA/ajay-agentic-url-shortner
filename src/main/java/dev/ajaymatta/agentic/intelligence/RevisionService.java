@@ -39,7 +39,8 @@ public class RevisionService {
     @Transactional
     public WorkflowDetails replan(UUID workflowId, RevisionRequests.Replan request, String actor) {
         var old = lock(workflowId, request.expectedRevision());
-        if (!List.of(WorkflowStatus.AWAITING_CHANGE_APPROVAL, WorkflowStatus.SAFE_STOPPED, WorkflowStatus.AWAITING_CLARIFICATION).contains(old.status())) {
+        if (!List.of(WorkflowStatus.AWAITING_CHANGE_APPROVAL, WorkflowStatus.SAFE_STOPPED, WorkflowStatus.AWAITING_CLARIFICATION,
+                WorkflowStatus.AWAITING_RELEASE_APPROVAL,WorkflowStatus.RELEASE_READY,WorkflowStatus.ROLLED_BACK,WorkflowStatus.CANCELLED).contains(old.status())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Current revision is processing or cannot be replanned");
         }
         String requirement = request.requirement() == null ? old.requirement() : request.requirement().strip();
@@ -73,7 +74,7 @@ public class RevisionService {
             store.persistArtifact(new EngineeringArtifact(UUID.randomUUID(), revisionId, taskId, EngineeringArtifact.ArtifactType.REQUIREMENT_ANALYSIS,
                     "clarification/1.0", content, Hashes.sha256(content), List.of(old.requirementHash()), store.now()), "authenticated-human", "clarification-v1");
         }
-        jdbc.update("UPDATE engineering_artifacts SET invalidated_at=? WHERE revision_id=? AND artifact_type NOT IN ('REPOSITORY_MAP','MANIFEST') AND invalidated_at IS NULL", now, old.id());
+        jdbc.update("UPDATE engineering_artifacts SET invalidated_at=? WHERE revision_id=? AND NOT (artifact_type IN ('REPOSITORY_MAP','MANIFEST') AND schema_version='1.0') AND invalidated_at IS NULL", now, old.id());
         jdbc.update("UPDATE approvals SET invalidated_at=? WHERE revision_id=? AND invalidated_at IS NULL", now, old.id());
         jdbc.update("UPDATE agent_tasks SET state='INVALIDATED',updated_at=?,version=version+1 WHERE revision_id=? AND state NOT IN ('SUCCEEDED','CANCELLED')", now, old.id());
         jdbc.update("UPDATE workflows SET current_revision=?,status='RECEIVED',version=version+1,updated_at=? WHERE id=?", old.number()+1, now, old.workflowId());

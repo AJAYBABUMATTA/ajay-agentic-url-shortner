@@ -28,6 +28,7 @@ public class IntelligenceStore {
         this.jdbc = jdbc; this.workflows = workflows; this.json = json; this.clock = clock;
     }
     public Instant now() { return clock.instant().truncatedTo(ChronoUnit.MICROS); }
+    public String repositorySelector(UUID revision) { return jdbc.queryForObject("SELECT repository_path FROM workflow_revisions WHERE id=?",String.class,revision); }
     private OffsetDateTime time() { return now().atOffset(ZoneOffset.UTC); }
     public String encode(Object value) {
         try { return json.writeValueAsString(value); }

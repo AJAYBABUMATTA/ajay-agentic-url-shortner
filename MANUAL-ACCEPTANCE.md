@@ -1,53 +1,33 @@
 # Manual acceptance
 
-## Requirement intelligence and planning
+## Stage 4 scope
 
-- [x] Default clean verification completed: 90 passed, zero failures/errors/skips.
-- [x] Automatic scheduled dispatch tested without a user stage command.
-- [x] Clear/ambiguous requirements and missing/conflicting policies tested.
-- [x] Authentication, expected-revision conflicts and invalid answer IDs tested.
-- [x] Distinct requirements/repositories produce different task graphs/impacts.
-- [x] Ambiguity causes no workspace creation or source mutation.
-- [x] Verified snapshots preserve source/baseline and reject unsafe/oversized inputs.
-- [x] Requirement replanning invalidates evidence/approvals and verifies inventory reuse.
-- [x] Upstream source changes prevent inventory reuse in automated tests.
-- [x] Updated native-link rejection test passes on Windows.
-- [x] Six PostgreSQL checks plus four generated-build/API checks pass (100 total tests).
-- [x] Live check-intelligence.ps1 passes against restarted latest application.
-- [x] Engineering suites and full clean verification results recorded.
-- [ ] User validates this delivery and creates the commit manually.
+- [x] Parallel ready branches; dependent shared-file proposals serialize and join.
+- [x] Connected brownfield total/UTC daily analytics with retained baseline regression.
+- [x] Real compiler and production HTTP-test failures lead to scoped repairs and real rebuilds.
+- [x] Three-build bound; unsupported diagnosis restores baseline and stops.
+- [x] Cancellation during real Maven verification terminates child execution before rollback.
+- [x] Exact current plan/outcome approval, rejection, stale conflicts and invalidation.
+- [x] Ten feature gates connect criteria, current production/tests, actual build evidence and policy/human decisions.
+- [x] Upstream change prevents stale release; authenticated replanning creates fresh lineage.
+- [x] Complete outcome includes assumptions/risks/limitations/approvals/policies/attempts/recovery.
+- [x] Reliability metrics implemented with bounded labels and durable success gauge.
+- [x] Stage-4 clean verification: 115 passing; final targeted correction check: 12 passing; exact coverage and evidence recorded in REVIEWER-GUIDE.md.
+- [ ] User validates persistent local demos and supplies manual commit hash.
 
-## Final assessment acceptance
+## Final assessment acceptance (stage 5)
 
-- [x] First complete generated, compiled and tested create/redirect URL-shortener slice.
-- [ ] Every behavioral criterion maps to connected production and meaningful tests.
-- [ ] Failure-driven repair, bounded retry/fallback, verified rollback and safe stop.
-- [ ] Authenticated exact plan/outcome approval, rejection and invalidation.
-- [ ] Reliability metrics and end-to-end lineage verified.
-- [ ] Complete service API, security, analytics, rate limiting and concurrency checks.
-- [ ] Non-root images, two orchestrators, durable recovery and failover proven.
-- [ ] Coverage threshold enforced; final Maven totals recorded.
-- [ ] Images rebuilt, Compose validated, six demos run against final images.
+- [ ] Full URL creation/redirect/aliases/409/expiry/410/inspection/deactivation/analytics APIs.
+- [ ] PostgreSQL target persistence, validation, RFC errors, OpenAPI, rate limits/Retry-After,
+      URL security, collision-safe codes, concurrency and cleanup.
+- [ ] Non-root images, two orchestrators, durable leases/recovery and failover evidence.
+- [ ] CI and enforced numeric coverage threshold.
+- [ ] Final clean Maven verification with exact totals.
+- [ ] Images rebuilt, Compose validated and six demos executed against final images.
 - [ ] Generated source/tests/diffs/manifests/logs/hashes/outcomes inspected.
-- [ ] User-run git diff --check and all PDF traceability rows verified.
+- [ ] Every PDF row checked; rubric-critical gaps fixed, optional hardening separate.
+- [ ] User-run git diff --check output returned.
 
-Documentation or passing platform tests alone do not satisfy engineering acceptance.
-
-## Engineering execution stage
-
-- [x] Exact current-plan authentication and approval queue execution automatically.
-- [x] Original fixture stays unchanged; generated files live in revision workspaces.
-- [x] Agents produce full file operations with optimistic hashes and criterion/task lineage.
-- [x] Validators reject invalid scope, paths, duplicates, limits and stale hashes.
-- [x] Applied contents are verified against proposals; manifest and unified diff are persisted.
-- [x] Failed partial patch batches restore prior contents in automated tests.
-- [x] Fixed Maven tool accepts only platform build assets and strips platform secrets.
-- [x] Real generated HTTP tests verify create, 302 redirect, invalid input and missing code.
-- [x] Real compiler and HTTP-test failures persist evidence and safely stop.
-- [x] Latest HTTP-only PostgreSQL execution and requested 301 scenario verified.
-- [x] Final clean verification: 100 tests; 95.00% line / 71.48% branch coverage.
-- [ ] User validates the persistent greenfield API demo and provides a manual commit hash.
-
-Stage 4 still owns automatic diagnosis/repair, parallel scheduling, recovery policies,
-durable rollback, cancellation, complete feature gates and release approval. Stage 5
-owns complete URL-service hardening, final images/CI/coverage enforcement/failover.
+Current local recovery is bounded and deterministic. Passing unit tests or documentation
+alone does not establish final deployment acceptance. Shared-token identity, process
+isolation, crash-atomic batches and arbitrary-domain generation are documented limits.

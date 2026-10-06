@@ -1,110 +1,83 @@
 # Architecture
 
-## Automatic intelligence pipeline
+## Execution chain
 
-Strict API -> durable RECEIVED revision -> scheduled atomic intake claim ->
-requirement agent -> ambiguity agent -> clarification gate -> controlled repository
-snapshot -> repository agent -> dynamic planning agent -> change approval gate.
+Strict intake -> durable revision -> requirement and ambiguity agents -> clarification
+gate -> controlled repository snapshot -> repository analysis -> criterion-specific
+DAG -> architecture/security-design agents -> exact CHANGE approval -> production and
+test proposals -> synchronization and governed patch application -> fixed Maven clean
+verify -> diagnosis/production repair when supported -> post-build documentation/security
+review -> ten feature gates -> exact RELEASE approval -> persisted final outcome.
 
-The worker invokes Agent/ModelProvider contracts through IntelligenceExecutor.
-Each analysis stage records a running attempt, typed artifact, schema/lineage
-validation, terminal attempt and audit record. IntelligenceExecutor rejects
-engineering roles. A separate EngineeringExecutor now dispatches architecture,
-implementation, testing, documentation and security specialists, and controlled
-patch/build tools. Provider output cannot execute commands or mutate a target.
+Control-plane records own workflows/revisions/tasks/dependencies/gates, approvals,
+policies and audit. Execution-plane interfaces own agents/executors/providers, tools,
+artifacts/validators, attempts, retry/fallback and rollback. No caller can complete a
+task, supply agent output or choose a shell command. Deterministic providers use typed
+capability templates and conservative existing-source transformations; they are not
+an arbitrary-domain LLM. No external model is required.
 
-The intake worker polls persisted RECEIVED records, so unclaimed intake survives
-restart. Recovery of a crash after a claim, worker leases/fencing, retries and parallel
-execution are later work. Planned parallel branches exist now; no claim is made
-that production branches execute concurrently yet.
+## Scheduling and context
 
-## Control and execution planes
+The durable engineering queue is atomically claimed. Ready DAG branches execute on
+at most four workers by default, configurable within 1–8. Shared production paths
+are serialized by planner dependencies. All test proposals join before mutation.
+Tasks receive ancestor artifacts, exact requirement/plan hashes and a persisted task
+input. Brownfield later branches see a virtual tree containing their ancestors' exact
+proposals, so optimistic UPDATE hashes bind the correct predecessor content. Actual
+patch application rechecks those hashes in the same dependency order.
 
-Workflow/revision/task/dependency/gate/policy/approval/audit records govern lifecycle.
-Agents, providers, controlled tools, artifacts, validators, attempts and workspace
-contracts define the execution boundary. The analysis executor currently performs
-four analysis roles. Engineering agents return structured CREATE/UPDATE/DELETE
-proposals with complete content, optimistic hashes, task/criterion/revision lineage
-and input hashes. Their validators enforce the exact approved task file scope.
+Build/file capabilities execute at exclusive graph synchronization points. Parallel
+agent branches generate artifacts only. Documentation/security depend on successful
+build evidence; readiness joins both. Evaluated entry, artifact, patch, build and
+feature gates are persisted. Conditional diagnosis/repair tasks are appended to the
+runtime graph with their approved recovery scope and failed-attempt lineage.
 
-## Requirement and revision semantics
+## Recovery and governance
 
-Offline interpretation extracts observable criteria, assumptions, risks and
-constraints. Missing scope/policies/units, unmeasurable performance and conflicting
-redirect/analytics requirements produce questions. Answers must match the outstanding
-question IDs and actually resolve ambiguity; a non-answer can create another paused
-revision without source access.
+The plan declares at most three build attempts and a production-file repair allowlist.
+Real compilation/test failures permit diagnosis; known supported fixes are the missing
+brownfield bootstrap type and incorrect generated redirect status. Repair agents return
+complete UPDATE content, expected hashes and failure/input lineage. Validators prohibit
+repairing tests or build configuration. Unsupported diagnoses, exhausted attempts,
+unavailable tools, dependency failures and timeouts restore baseline and safely stop;
+there is no blind command retry. Cancellation flags interrupt the child process and
+terminate descendants before restoration. Restoration records expected/current manifest
+hashes and verification; a restoration failure becomes FAILED, never release-ready.
 
-Clarification/replanning use authenticated shared-token operators and expected
-revision numbers. A workflow row lock serializes revision creation. Parent lineage
-is preserved. Requirement-derived artifacts, pending tasks and prior approvals are
-invalidated; older rows remain available for audit. Repository inventory may be copied
-into the new revision only after current source manifests match; the reuse ledger
-links original/current artifacts. Requirement-specific plans are always regenerated.
+CHANGE approval binds current revision/plan hash, including recovery scope. RELEASE
+approval binds immutable candidate outcome evidence. Release rechecks current files,
+artifact hashes, upstream baseline and all gates before recording approval. Rejection
+restores the baseline and preserves human rejection evidence. Rollback invalidates
+outcomes and approved release decisions. Replanning uses a workflow row lock, parent
+revision lineage, evidence/approval invalidation and exact-manifest inventory reuse.
 
-Shared-token authorization is a local assessment boundary, not independent identity
-verification. Exact-plan CHANGE approval now governs engineering dispatch; production
-identity/roles and exact-outcome RELEASE approval remain later work.
+## Files, builds and feature gates
 
-## Repository and planning
+Repository tools enforce approved separate source/workspace roots, bounded UTF-8 files,
+traversal/link/junction rejection and verified snapshots. ProposalTool enforces supported
+roots/types, 100 operations, 256 KiB per file, 1 MiB per batch, duplicate rejection,
+optimistic hashes, atomic file writes, exact content checks, unified diffs and rollback.
+Original source and baseline are distinct; source is never mutated by execution.
 
-RepositoryTools validates relative selectors and approved roots, rejects traversal,
-symlinks/junction changes, unsupported files and excessive counts/sizes, excludes
-build/cache/secret directories, and reads strict UTF-8 through non-following channels.
-Source, baseline and workspace contents are verified after copying. Baseline and
-repository locations are separate. No target-source write is performed.
+Fixed Maven clean verify accepts only pinned platform-owned POM/wrapper assets, rejects
+Maven extension/config hooks, strips platform secrets and Java/Maven option hooks,
+bounds output/time, and parses compiler/class, Surefire and JaCoCo evidence. Skipped
+cases do not count. Zero exit without compiled source, tests and coverage cannot pass.
 
-Limits default to 2,000 files, 256 KiB per file and 10 MiB total. Literal search is
-bounded to 100 results. Unavailable or unsafe repositories stop the workflow safely.
-Partial snapshots after failure are not trusted or resumed in this stage.
+The ten readiness checks cover criterion-to-production, meaningful canonical generated
+HTTP tests, compiled changed production, required generated/baseline tests, connected
+runtime, successful build, current policies/security validation, current artifact/file
+hashes, exact current change approval/upstream snapshot and exact outcome release approval.
+A passing candidate has featureComplete=true, releaseReady=false; final approval closes
+gate ten. Final outcome links candidate hash, approval, artifacts, attempts and recovery.
 
-Static analysis finds Java types, Spring routes and source type references. These
-are impact/data-flow candidates; actual runtime connectivity requires generated
-compilation and integration tests. Brownfield impacts conservatively include runtime
-controllers/services/domain/persistence candidates to avoid omitting dependencies.
+## Limits
 
-Planning creates implementation/testing branches per behavioral criterion, varies
-paths with repository structure, serializes overlapping production impacts, and
-adds synchronization, architecture/security and documentation/release joins.
-Graph validation rejects duplicate/missing/self dependencies and cycles. Gates and
-layers are persisted; pending engineering tasks cannot be manually completed.
-
-## Persistence and limitations
-
-PostgreSQL/Flyway owns 17 platform tables. JDBC transactions keep intake/revisions
-atomic. Composite FKs bind evidence to revisions and exact hashes. UTC timestamps
-use microsecond precision. JSON/text payloads are application-validated and hashed;
-database owners can still alter them. Audit has no modification API.
-
-NIO checks detect links and changes but are not an OS sandbox against a hostile
-process racing ancestor replacement. Production build workers need restricted
-filesystem/process credentials, isolated mounts and no platform secrets. Fixed
-Maven commands execute build logic. The bounded greenfield runner accepts only the
-platform-owned pinned POM/wrapper, rejects Maven extension/configuration hooks and
-strips platform secrets and Java/Maven option hooks from the child environment.
-This reduces the execution surface but is not OS process isolation. Final service
-hardening, restricted worker containers and failover are pending.
-
-## First engineering execution slice
-
-Exact current plan approval atomically queues engineering_runs. A single-instance
-poller claims the run and dispatches pending tasks in dependency-valid sequential
-order. Stage/task input artifacts are persisted before execution. Proposals remain
-unapplied until all generated test branches finish. ProposalTool rejects duplicate
-paths, traversal/links, unsupported roots/types, oversized operations and optimistic
-hash conflicts. It writes each file atomically, verifies exact final contents and
-restores prior contents after a failed batch; it does not provide crash-atomic batch
-application or durable whole-workflow rollback yet.
-
-MavenBuildTool runs fixed Maven Wrapper clean verify with a bounded timeout, drains
-both output pipes while retaining bounded prefixes, and reads compiler, Surefire and
-JaCoCo reports with external XML resolution disabled. Compiled paths require class
-outputs; skipped tests do not count as executed. A zero exit without compiled source,
-executed tests and coverage cannot pass. Before and after build/outcome validation,
-manifest checks prevent unnoticed workspace drift.
-
-The bounded outcome binds criteria to generated production paths and executed HTTP
-tests. Its releaseReady flag is always false in this stage. release-readiness remains
-AWAITING_APPROVAL with its RELEASE_APPROVED exit gate closed. Unsupported capabilities
-and failed builds stop safely with evidence; parallelism, diagnosis/repair, bounded
-retries/fallback, durable rollback, cancellation and release governance remain next.
+Four Flyway migrations manage 18 platform tables. Claiming is atomic but crash leases,
+fencing and automatic recovery of interrupted claims are stage 5. NIO/file checks are
+not an OS sandbox against hostile process races; deterministic generated builds are
+trusted local assessment execution. File writes are atomic individually; batches are
+restored on handled failure, not crash-atomic. Baseline restoration excludes Maven build
+output, which may remain for diagnosis and is never release-authorizing evidence.
+Shared-token operators are a local boundary, not independent enterprise identities.
+Generated data is in memory; production URL hardening/deployment remain stage 5.

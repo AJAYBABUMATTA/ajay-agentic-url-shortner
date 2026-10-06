@@ -18,7 +18,38 @@ public class DeterministicEngineeringProvider implements ModelProvider {
         int redirectStatus=analysis.criteria().stream().filter(c -> c.capability().equals("redirect"))
                 .anyMatch(c -> c.description().contains("301")) ? 301 : 302;
         Object output;
-        if(request.role()==AgentRole.IMPLEMENTATION || request.role()==AgentRole.TESTING) {
+        if(request.role()==AgentRole.DIAGNOSIS) {
+            var failure=store.decode(context.inputs().get("failure").content(),BuildEvidence.class);
+            String logs=failure.stdout()+"\n"+failure.stderr();
+            List<String> paths=input.task().impactedPaths().stream().filter(p->logs.contains(p.substring(p.lastIndexOf('/')+1))).toList();
+            String strategy="UNSUPPORTED";
+            String boot=input.baseline().get(BrownfieldSources.ROOT+"TargetApplication.java");
+            if(failure.classification()==BuildEvidence.FailureClassification.COMPILATION && logs.contains("MissingApplication") && boot!=null && boot.contains("MissingApplication.class")) strategy="REPLACE_MISSING_BOOTSTRAP_TYPE";
+            String redirect=input.baseline().get(GeneratedServiceSources.ROOT+"RedirectController.java");
+            if(failure.classification()==BuildEvidence.FailureClassification.TEST && failure.failedTests().stream().anyMatch(t->t.endsWith("#createdCodeRedirectsToExactStoredTargetThroughHttp"))
+                    && redirect!=null && redirect.contains("ResponseEntity.status(418)")) {
+                strategy="RESTORE_REQUIRED_REDIRECT_STATUS"; paths=List.of(GeneratedServiceSources.ROOT+"RedirectController.java");
+            }
+            output=new EngineeringModels.Diagnosis(failure.classification(),paths,failure.failedTests(),logs.substring(Math.max(0,logs.length()-12000)),!strategy.equals("UNSUPPORTED"),strategy);
+        } else if(request.role()==AgentRole.REPAIR) {
+            var diagnosis=store.decode(context.inputs().get("diagnosis").content(),EngineeringModels.Diagnosis.class);
+            String path, replacement;
+            switch(diagnosis.strategy()) {
+                case "REPLACE_MISSING_BOOTSTRAP_TYPE" -> {
+                    path=BrownfieldSources.ROOT+"TargetApplication.java";
+                    replacement=input.baseline().get(path).replace("MissingApplication.class","TargetApplication.class");
+                }
+                case "RESTORE_REQUIRED_REDIRECT_STATUS" -> {
+                    path=GeneratedServiceSources.ROOT+"RedirectController.java";
+                    replacement=input.baseline().get(path).replace("ResponseEntity.status(418)","ResponseEntity.status("+redirectStatus+")");
+                }
+                default -> throw new IllegalArgumentException("Evidence does not support an approved production repair");
+            }
+            String original=input.baseline().get(path);
+            if(original.equals(replacement) || !input.task().impactedPaths().contains(path)) throw new IllegalArgumentException("Repair exceeds approved scope or changes nothing");
+            output=new EngineeringModels.Proposal(List.of(new FileOperation(FileOperation.Operation.UPDATE,path,replacement,Hashes.sha256(original),
+                    "Repair diagnosed "+diagnosis.strategy()+" using build evidence "+context.inputs().get("failure").sha256(),context.revisionId().toString(),input.task().criterionIds(),context.taskId(),context.inputHashes())));
+        } else if(request.role()==AgentRole.IMPLEMENTATION || request.role()==AgentRole.TESTING) {
             Map<String,String> files=new LinkedHashMap<>();
             switch(input.task().key()) {
                 case "implement-create" -> {
@@ -30,6 +61,10 @@ public class DeterministicEngineeringProvider implements ModelProvider {
                 case "implement-redirect" -> files.put(GeneratedServiceSources.ROOT+"RedirectController.java",GeneratedServiceSources.redirect(redirectStatus));
                 case "test-create" -> files.put(GeneratedServiceSources.TEST+"CreateUrlTest.java",GeneratedServiceSources.CREATE_TEST);
                 case "test-redirect" -> files.put(GeneratedServiceSources.TEST+"RedirectUrlTest.java",GeneratedServiceSources.redirectTest(redirectStatus));
+                case "implement-analytics-total" -> { files.putAll(assets.buildFiles()); files.putAll(BrownfieldSources.total(input.baseline())); }
+                case "implement-analytics-daily" -> files.putAll(BrownfieldSources.daily(input.baseline()));
+                case "test-analytics-total" -> files.put(BrownfieldSources.TEST+"AnalyticsTotalTest.java",BrownfieldSources.analyticsTest(false));
+                case "test-analytics-daily" -> files.put(BrownfieldSources.TEST+"AnalyticsDailyTest.java",BrownfieldSources.analyticsTest(true));
                 default -> throw new IllegalArgumentException("No verified generator for this task");
             }
             output=new EngineeringModels.Proposal(files.entrySet().stream().map(entry -> new FileOperation(
@@ -43,22 +78,26 @@ public class DeterministicEngineeringProvider implements ModelProvider {
                 case DOCUMENTATION -> "Run the generated service using ./mvnw spring-boot:run (Windows: .\\mvnw.cmd spring-boot:run). POST /api/v1/urls with target; GET /{code}. Generated HTTP tests exercise creation, redirects and invalid inputs.";
                 default -> throw new IllegalArgumentException("Unsupported engineering specialist");
             };
+            boolean analytics=analysis.criteria().stream().anyMatch(c->c.capability().startsWith("analytics"));
+            if(analytics && request.role()==AgentRole.ARCHITECTURE) decision="Preserve the existing UrlController -> UrlService runtime. Successful redirects call recordRedirect; concurrent per-code counters expose total and UTC-day analytics through the existing controller. Baseline tests remain part of Maven verification.";
+            if(analytics && request.role()==AgentRole.SECURITY_RISK) decision="Preserve existing URL behavior and inspect collision-safe codes and concurrent analytics counters. Existing scheme-prefix validation does not establish complete host/credential/URL security; production protections remain stage 5.";
+            if(analytics && request.role()==AgentRole.DOCUMENTATION) decision="Run the generated service using the platform Maven Wrapper. POST /api/v1/urls creates a code; GET /{code} redirects and increments counters. GET /api/v1/urls/{code}/analytics returns totals and UTC daily counts; optional day=YYYY-MM-DD selects one UTC day. Generated HTTP tests exercise counts, independent codes, empty counts, unknown codes and query-day behavior; the original regression test remains.";
             if(input.task().key().equals("security-review")) {
-                String production=context.inputs().values().stream().filter(a->a.type()==EngineeringArtifact.ArtifactType.FILE_PROPOSAL)
-                        .flatMap(a->store.decode(a.content(),EngineeringModels.Proposal.class).operations().stream())
-                        .filter(o->o.path().startsWith("src/main/java/")).map(FileOperation::content).reduce("",String::concat);
-                for(String required:List.of("SecureRandom","putIfAbsent","getHost()","getUserInfo()","length()>2048","https")) {
+                String production=input.baseline().entrySet().stream().filter(e->e.getKey().startsWith("src/main/java/")).map(Map.Entry::getValue).reduce("",String::concat);
+                boolean daily=analysis.criteria().stream().anyMatch(c->c.capability().equals("analytics-daily"));
+                for(String required:analytics ? (daily ? List.of("SecureRandom","putIfAbsent","recordRedirect","totalClicks","dailyClicks","Clock.systemUTC") : List.of("SecureRandom","putIfAbsent","recordRedirect","totalClicks"))
+                        : List.of("SecureRandom","putIfAbsent","getHost()","getUserInfo()","length()>2048","https")) {
                     if(!production.contains(required)) throw new IllegalArgumentException("Generated slice lacks required security control: "+required);
                 }
-                decision+=" Inspected generated production proposals for SecureRandom, collision-safe insertion, HTTP(S), host, credential and length checks. Static token checks alone are not a complete security assessment.";
+                decision+=" Inspected current production source for the declared capability controls. Static token checks alone are not a complete security assessment.";
             }
             if(request.role()==AgentRole.DOCUMENTATION) {
-                var build=context.inputs().values().stream().filter(a->a.type()==EngineeringArtifact.ArtifactType.BUILD_EVIDENCE).findFirst().orElseThrow();
+                var build=context.inputs().get("build");
                 var result=store.decode(build.content(),BuildEvidence.class);
                 decision+=" Verified build artifact "+build.sha256()+" compiled "+result.compiledProductionPaths().size()+" production files and executed "+result.discoveredTests().size()+" tests; coverage report: "+result.coverage().reportLocation();
             }
             output=new EngineeringModels.Decision(decision,input.task().criterionIds(),context.inputHashes(),
-                    List.of("In-memory storage resets on restart", "Expiry, aliases, analytics, rate limits and production URL security are deferred", "Release approval and feature-completion governance are not enabled in this slice"));
+                    List.of("In-memory storage resets on restart", "Aliases, expiry, rate limits and complete production URL security remain stage 5", "Release authorization does not deploy the generated service"));
         }
         return new ModelResponse("deterministic","engineering-v1",store.encode(output),Duration.ZERO);
     }

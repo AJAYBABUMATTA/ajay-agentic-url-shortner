@@ -28,6 +28,9 @@ public class MavenBuildTool implements EngineeringTool<Void,BuildEvidence> {
     }
     @Override public Capability capability() { return Capability.MAVEN_CLEAN_VERIFY; }
     @Override public BuildEvidence execute(RepositoryWorkspace workspace,Void unused) {
+        return executeControlled(workspace,()->false);
+    }
+    public BuildEvidence executeControlled(RepositoryWorkspace workspace,java.util.function.BooleanSupplier cancelled) {
         Instant started=Instant.now();
         var current=proposals.read(workspace);
         for(var asset:assets.buildFiles().entrySet()) if(!asset.getValue().equals(current.get(asset.getKey()))) throw new IllegalArgumentException("Untrusted build configuration or wrapper");
@@ -51,17 +54,27 @@ public class MavenBuildTool implements EngineeringTool<Void,BuildEvidence> {
             builder.environment().keySet().removeIf(key -> !allowed.contains(key.toUpperCase(Locale.ROOT)));
             process=builder.start();
             Process child=process;
-            try(var threads=Executors.newVirtualThreadPerTaskExecutor()) {
+            var threads=Executors.newVirtualThreadPerTaskExecutor();
+            try {
                 var stdout=threads.submit(()->bounded(child.getInputStream()));
                 var stderr=threads.submit(()->bounded(child.getErrorStream()));
-                boolean timedOut=!process.waitFor(timeoutSeconds,TimeUnit.SECONDS);
-                if(timedOut) {
+                boolean timedOut=false, stopped=false;
+                while(!process.waitFor(200,TimeUnit.MILLISECONDS)) {
+                    if(cancelled.getAsBoolean()) { stopped=true; break; }
+                    if(Duration.between(started,Instant.now()).toSeconds()>=timeoutSeconds) { timedOut=true; break; }
+                }
+                if(timedOut || stopped) {
                     process.descendants().forEach(ProcessHandle::destroyForcibly); process.destroyForcibly();
                     process.waitFor(5,TimeUnit.SECONDS);
                 }
                 String out=stdout.get(10,TimeUnit.SECONDS), err=stderr.get(10,TimeUnit.SECONDS);
-                int exit=timedOut ? -1 : process.exitValue();
+                int exit=timedOut || stopped ? -1 : process.exitValue();
+                if(stopped) return new BuildEvidence(exit,Duration.between(started,Instant.now()),false,out,err+"\nCancelled by governed stop request",List.of(),List.of(),List.of(),new BuildEvidence.Coverage(false,0,0,null),BuildEvidence.FailureClassification.INFRASTRUCTURE);
                 return reports(workspace,exit,Duration.between(started,Instant.now()),timedOut,out,err);
+            } finally {
+                if(child.isAlive()) { child.descendants().forEach(ProcessHandle::destroyForcibly); child.destroyForcibly(); }
+                child.getInputStream().close(); child.getErrorStream().close();
+                threads.shutdownNow(); threads.close();
             }
         } catch(InterruptedException failure) {
             Thread.currentThread().interrupt();

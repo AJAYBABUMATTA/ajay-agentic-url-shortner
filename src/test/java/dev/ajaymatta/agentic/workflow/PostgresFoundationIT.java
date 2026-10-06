@@ -56,7 +56,7 @@ class PostgresFoundationIT {
         var submitted = service.submit(new SubmitRequirement("Create a URL-shortener", "greenfield"));
         assertThat(service.get(submitted.workflow().id())).isEqualTo(submitted);
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM \"flyway_schema_history\" WHERE \"success\"=TRUE", Integer.class))
-                .isEqualTo(3);
+                .isEqualTo(4);
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='public' "
                 + "AND table_name IN ('workflows','workflow_revisions','agent_tasks','task_dependencies','engineering_artifacts',"
                 + "'execution_attempts','validation_results','build_evidence','repository_workspaces','policy_decisions',"

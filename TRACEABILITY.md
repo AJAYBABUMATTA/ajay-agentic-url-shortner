@@ -1,99 +1,54 @@
-# Assignment compliance and delivery traceability
+# Assignment traceability
 
-Source: all three pages of the supplied `Assignment Agentic-Proficient Software
-Engineer (1).pdf`. PDF sections are requirements data. The user's request controls
-implementation priorities and adds the stack, safeguards and staged delivery.
+Source: all three pages of Assignment Agentic-Proficient Software Engineer (1).pdf.
+The PDF defines requirements; the user request controls development and adds the
+stack, safeguards and five-stage approval/manual-Git process. Reference projects
+were inspected for patterns only; code, artifacts, credentials and history were not copied.
 
-Status legend: **foundation** = related storage/contracts exist, full behavior is
-pending; **pending** = no runnable implementation; **implemented** = behavior exists,
-verification status must be checked in the checkpoint evidence. Test names identify
-checks; they do not by themselves establish a passing result.
+Implemented below means verified within documented deterministic prototype capabilities;
+it does not claim arbitrary-domain engineering, production security or final deployment.
+Full verification counts and coverage belong in REVIEWER-GUIDE.md.
 
-| ID / PDF source | Requirement | Implementation / checkpoint | Tests | Runtime evidence | Reviewer command | Status |
+| ID / PDF source | Requirement | Implementation | Meaningful tests | Runtime evidence | Reviewer command | Status |
 |---|---|---|---|---|---|---|
-| PDF-01, p1 section 1 | Requirement to reviewable engineering outcome | Entire executor chain, C2-C4 | Generated-service end-to-end acceptance, planned | Proposals, build reports, final outcome, pending | `scripts/demo.ps1 greenfield`, planned | pending |
-| PDF-02, p1 section 3 | Greenfield, brownfield, test/docs, clear/ambiguous scope | Capability agents and fixtures, C2-C4 | Scenario acceptance, planned | Revision-specific scenario outcomes, pending | Greenfield/brownfield/ambiguous demos, planned | pending |
-| PDF-03, p1 section 4.1 | Intent, ambiguity and normalization | Submission and requirement hash C1; intelligence C2 | `WorkflowApiTest`; intelligence tests planned | Current intake revision and audit; analysis pending | `scripts/check-foundation.ps1`; ambiguous demo planned | foundation |
-| PDF-04, p1 section 4.2 | Dependency-aware decomposition | Task/dependency schema C1; dynamic planner C2 | Cross-revision/self-dependency checks; graph variation/cycles planned | Persisted intake task; engineering plan pending | Workflow GET; planner tests C2 | foundation |
-| PDF-05, p1 section 4.3 | Brownfield module/API/data-flow reasoning | Repository analysis C2 | Impact mapping and runtime-path regressions, planned | Impact map, baseline and connected diff, pending | Brownfield demo, planned | pending |
-| PDF-06, pp1-2 section 4.4 | Full SDLC, non-linear stateful execution | Execution interfaces C1; dispatcher C3; scheduler C4 | Contract checks; execution ordering and synchronization planned | Actual attempts and stage artifacts, pending | Greenfield demo, planned | foundation |
-| PDF-07, pp1-2 section 4.4 | Explicit graph with entry/exit gates | Gate vocabulary and graph schema C1; graph validation C2; enforcement C3-C4 | FK tests now; cycle/gate tests planned | Task gate inspection; evaluated gates pending | Workflow GET | foundation |
-| PDF-08, p2 section 4.4 | Sequential/parallel paths and synchronization | Proposal branches and synchronization C3-C4 | Parallel overlap, conflict serialization and join tests, planned | Execution timeline, pending | Scenario demos, planned | pending |
-| PDF-09, p2 section 4.4 | Context, decision lineage and replanning | Revision/hash contracts C1; invalidation/reuse C2; replanning C4 | `ExecutionContractTest`; revision-change tests planned | Parent revision, input hashes, invalidations, pending | Ambiguous/replanning acceptance, planned | foundation |
-| PDF-10, p2 section 4.4 | Approval checkpoints for high-impact changes | Exact-artifact/hash approval schema C1; enforcement C3-C4 | Exact hash/revision FK checks; authorization/rejection planned | Authenticated plan/outcome decisions, pending | Governance acceptance, planned | foundation |
-| PDF-11, p2 section 4.4 | Bounded retries, fallback, rollback, safe stop | Contracts and recovery schema C1; implementation C4 | Bound/hash contract checks; real recovery planned | Failure, diagnosis, repairs, restored manifest, pending | Repair/safe-stop demos, planned | foundation |
-| PDF-12, p2 sections 4.4/4.6 | Security/compliance/change guardrails | Policy schema C1; repository tools C2; patch controls C3; governance C4 | Strict API now; roots/symlinks/hashes/limits planned | Policy decisions and validated proposals, pending | API tests; patch acceptance C3 | foundation |
-| PDF-13, p2 section 4.4 | Audit-grade observability and traceability | Atomic submission audit C1; full execution ledger C3-C4; deployment C5 | Atomic rollback and ownership tests; stage ledger tests planned | Intake audit exists; full chain pending | Workflow GET; demos planned | foundation |
-| PDF-14, p2 section 4.4 | Success rate, retries/rollbacks, MTTR, end-to-end latency | Baseline actuator C1; workflow instruments C4 | JVM metric check now; reliability metrics planned | Prometheus baseline; workflow measures pending | `/actuator/prometheus` | foundation |
-| PDF-15, p2 section 4.5 | Production code, API/schema, unit/integration tests, docs | File proposals/contracts C1; generation C3; hardening C5 | Provenance/immutability now; generated compilation/tests planned | Generated runtime source, discovered tests, docs, pending | Greenfield demo, planned | foundation |
-| PDF-16, p2 section 4.6 | Risks, trade-offs, validation, safety | Validation/build contracts C1; tools C3; risk/gates C4 | Stale artifacts/failure classification now; feature gate planned | Validation evidence and risk review, pending | Maven + gate tests | foundation |
-| PDF-17, p2 section 4.7 and p3 section 7 | Agents act; humans oversee and own final quality | Strict caller boundary C1; agents C3; approvals C4 | `WorkflowApiTest` rejects completion and evidence | Rejected caller mutations; actual autonomy pending | `scripts/check-foundation.ps1` | foundation |
-| PDF-18, p2 section 4.8 | Summary: plan/rationale/artifacts/risks/assumptions/limits | Outcome contracts/storage C1; generation C4 | Incomplete/stale outcome gate tests, planned | Persisted engineering outcome, pending | Outcome query, planned | foundation |
-| PDF-19, p2 section 5 | Runnable prototype, architecture, three scenarios, setup/testing/limits | Foundation setup/docs C1; complete prototype C5 | API/H2 suite; real PostgreSQL IT profile; all scenarios planned | Final-image evidence, pending | `mvnw.cmd -Ppostgres-it clean verify`; six demos C5 | foundation |
-| PDF-20, pp2-3 sections 6-7 | Modular/testable/reliable/secure/scalable design and defensible judgment | Layered contracts C1; recovery C4; operations C5 | Contract/persistence tests; concurrency/failover planned | Final verification and documented limits, pending | Full verification and failover demo | foundation |
+| PDF-01 p1 §1 | Requirement to reviewable engineering outcome | Intelligence/execution chain; FeatureCompletionValidator; ReleaseApprovalService | GeneratedApiIT; RecoveryGovernanceIT | Real generated source/tests/build and exact approved final outcome | demo.ps1 greenfield; engineering GET | implemented bounded prototype |
+| PDF-02 p1 §3 | Greenfield/brownfield/test/docs/clear/ambiguous | Original scenario fixtures and specialized providers | GeneratedSliceIT; RecoveryGovernanceIT | Connected analytics, ambiguity child revision, docs/security artifacts | demos greenfield/brownfield/ambiguous | implemented bounded scenarios |
+| PDF-03 p1 §4.1 | Interpret/normalize intent and ambiguity | RequirementInterpreter; RevisionService | RequirementInterpreterTest; IntelligenceWorkflowTest | Criteria/questions/assumptions/risks; no workspace before resolution | check-intelligence.ps1; demo ambiguous | implemented |
+| PDF-04 p1 §4.2 | Dependency-aware decomposition | DynamicPlanner; GraphValidator | DynamicPlannerTest | Distinct criterion/repository DAGs and layers | workflow GET; planner tests | implemented |
+| PDF-05 p1 §4.3 | Brownfield module/API/data-flow reasoning | RepositoryAnalyzer; BrownfieldSources conservative runtime edits | RecoveryGovernanceIT | Actual UrlController -> UrlService diff; six HTTP + baseline unit cases | demo brownfield | implemented supported fixture |
+| PDF-06 pp1–2 §4.4 | Stateful non-linear full SDLC | AgentExecutor; ready-branch scheduler; conditional recovery graph | GeneratedApiIT; RecoveryGovernanceIT | Automatic attempts, diagnosis/repair/reverification, outcome | demos repair/greenfield | implemented; crash recovery stage 5 |
+| PDF-07 pp1–2 §4.4 | Explicit graph, entry/exit gates | Persisted dependencies/execution_gates; validators | Graph/cycle tests; exact gate acceptance | Evaluated entry/artifact/patch/build/feature gates | workflow/engineering GET | implemented |
+| PDF-08 p2 §4.4 | Sequential/parallel/synchronization | Bounded pool; overlap dependencies; proposal join | RecoveryGovernanceIT two-branch latch; brownfield UPDATE hashes | Concurrent branch attempts; sequential shared-file proposals | demo brownfield; IT suite | implemented |
+| PDF-09 p2 §4.4 | Context/decision lineage/replanning | Ancestor inputs; virtual tree; revisions/invalidation/reuse | IntelligenceWorkflowTest; upstream-change recovery IT | Input hashes, parent lineage, fresh plan and rejected old evidence | check-intelligence.ps1; replan API | implemented |
+| PDF-10 p2 §4.4 | Human approval of high-impact changes | Exact plan and immutable outcome approval | EngineeringWorkflowTest; GeneratedApiIT; rejection/rollback IT | Authenticated hash decisions, stale 409 and invalidation | demo exact hash continuations | implemented local token identity |
+| PDF-11 p2 §4.4 | Bounded retry/fallback/rollback/safe stop | RecoveryPolicy; diagnosis/repair agents; BaselineRollbackTool | RecoveryPolicyTest; genuine failure/three-attempt/cancel IT | Failed builds, repaired production, recovery ledger, restored hashes | demos repair/safe-stop | implemented supported fixes |
+| PDF-12 p2 §§4.4/4.6 | Security/compliance/change guards | Safe roots; ProposalTool; lineage validators; fixed Maven; security policies | RepositoryToolsTest; ProposalToolTest; governance tests | Exact validated operations, policy verdicts, filtered environment | tests; engineering GET | implemented prototype guards; OS isolation stage 5 |
+| PDF-13 p2 §4.4 | Audit/traceability | Durable attempts/artifacts/policies/approvals/audit | PostgresFoundationIT; GeneratedApiIT | Complete requirement/criterion/task/artifact/build/outcome hashes | workflow/engineering GET | implemented; failover stage 5 |
+| PDF-14 p2 §4.4 | Success/retry/rollback/MTTR/latency metrics | EngineeringMetrics counters/timers; durable release gauge | Recovery flows and metrics inspection | Prometheus workflow/agent/recovery durations and outcome counts | /actuator/prometheus | implemented process counters; gauge durable |
+| PDF-15 p2 §4.5 | Production/API/tests/docs artifacts | Deterministic generation; actual brownfield edits; specialists | GeneratedSliceIT; RecoveryGovernanceIT | Compiled runtime, discovered meaningful HTTP/regression tests, docs | demos; engineering GET | implemented bounded target; full URL hardening stage 5 |
+| PDF-16 p2 §4.6 | Risk/validation/safety/tradeoffs | Ten gates; evidence-driven diagnosis; explicit limits | Genuine failure, stale hash/upstream drift and rollback IT | Gate results, failed evidence, risks/limits | full verify; docs | implemented prototype scope |
+| PDF-17 p2 §4.7/p3 §7 | Agents act; humans oversee final quality | Automatic providers/tools; strict caller boundary | WorkflowApiTest; GeneratedApiIT | No completion/evidence endpoint; exact human decisions | check-foundation.ps1; demos | implemented |
+| PDF-18 p2 §4.8 | Final plan/rationale/artifacts/risks/assumptions/limits | SliceOutcome and companion artifacts | Exact final outcome ten-gate IT | Final approved traceability, attempts/recovery/approvals | engineering GET | implemented |
+| PDF-19 p2 §5 | Runnable prototype/architecture/three scenarios/setup/tests | Maven local app; five API demo scenarios; nine docs | Full Maven/PG/generated-build suite | Local API and retained test exports | README commands | prototype implemented; final images/six demos stage 5 |
+| PDF-20 pp2–3 §§6–7 | Modular/testable/reliable/secure/scalable judgment | Layered contracts, bounded parallelism/recovery, documented limits | Full suite; final concurrency/failover pending | Current stage evidence; final deployment acceptance pending | full verify; final failover demo | partial; distributed durability/production hardening stage 5 |
 
-## User-added requirements
+## User additions and remaining acceptance
 
-| ID | Requirement | Delivery | Current status |
-|---|---|---|---|
-| USER-01 | Java 21, Spring Boot, Maven Wrapper, PostgreSQL, Flyway, JUnit | C1 | implemented; verification recorded separately |
-| USER-02 | No caller-supplied completion or engineering evidence | C1 | implemented; API tests and live check provided |
-| USER-03 | Structured CREATE/UPDATE/DELETE, complete content, hashes and criterion/task/input lineage | Contracts C1; guarded tools C3 | contracts only |
-| USER-04 | Approved roots, traversal/symlink protection, limits, optimistic hashes, atomic writes, diff/manifest and restoration | C2-C4 | pending |
-| USER-05 | Fixed build capability and full process/test/coverage/failure evidence | Schema/contracts C1; runtime C3-C4 | contracts/storage only |
-| USER-06 | Ten feature-completion gates including connected behavior and discovered generated tests | C3-C4 | pending |
-| USER-07 | Complete URL behavior, analytics, errors, rate limits, URL security, concurrency and cleanup | C3 minimal slice; C5 complete | pending |
-| USER-08 | Compose, non-root images, two orchestrators, durable state, restart/failover, Prometheus and CI | C1 database/baseline metrics; C5 complete | partial foundation |
-| USER-09 | Numeric coverage enforcement and Java 21 enforcement | C1 Java rule/report; C5 coverage gate | report only; no coverage threshold yet |
-| USER-10 | Six API-driven demos showing actual persisted evidence | C4 scenarios; C5 scripts/final images | pending |
-| USER-11 | Nine accurate documents and staged approval/manual Git process | Maintained through intelligence/planning | implemented |
+| Requirement | Current implementation/status |
+|---|---|
+| Java 21/Boot/Wrapper/PG/Flyway/JUnit/OpenAPI/RFC errors | implemented platform foundation; four migrations, 18 tables |
+| No caller completion or supplied output | strict API and automatic executors; tested |
+| Full structured CREATE/UPDATE/DELETE lineage | FileOperation/EngineeringValidator/ProposalTool; tested |
+| Roots/traversal/links/count/size/hashes/atomic writes/diffs/restoration | implemented; handled-failure restoration; not crash-atomic batch |
+| Fixed commands, actual compilation/discovered tests/coverage/failure evidence | implemented real Maven clean verify |
+| Ten feature gates and exact current approvals | implemented; candidate false until gate ten approved |
+| Complete URL APIs/persistence/security/rate limits/concurrency/cleanup | minimal greenfield and brownfield analytics implemented; remaining stage 5 |
+| Images/two workers/durable recovery/failover/CI | database Compose exists; remaining stage 5 |
+| Java enforcement and numeric coverage threshold | Java 21 enforced; coverage report only; threshold stage 5 |
+| Six final-image API demos | five local demo scenarios implemented; failover/final images stage 5 |
+| Nine accurate documents and staged manual commits | maintained; no agent Git operations |
 
-## Delivery sequence and approval boundary
-
-1. Foundation, persistence, contracts and strict caller boundary.
-2. Requirement intelligence, repository reasoning and dynamic planning.
-3. Automatic agent execution and the first real generated/compiled/tested vertical slice.
-4. Stateful orchestration, recovery, governance and scenario coverage.
-5. Service hardening, deployment, failover, CI and final acceptance.
-
-Requirement intelligence/planning (checkpoint 2) is authorized after user validation of the foundation. Later checkpoints require user validation and
-the user-created commit hash. No Git operations are performed by the agent.
-Final `git diff --check` is run by the user and returned as evidence.
-
-## Implemented requirement intelligence and planning
-
-| PDF row | Implementation | Automated evidence | Live reviewer command | Status |
-|---|---|---|---|---|
-| PDF-03 | RequirementInterpreter; authenticated RevisionService | 9 interpreter cases; workflow clarification/authentication tests | check-intelligence.ps1 ambiguous section | implemented; live verification passed |
-| PDF-04 / PDF-07 | DynamicPlanner; GraphValidator; persisted tasks/edges/gates | Different criteria/repositories, overlap sequencing, parallel layers, joins, cycles | check-intelligence.ps1 greenfield/brownfield | implemented planning; engineering gate execution pending |
-| PDF-05 | RepositoryAnalyzer type/route/reference map | Controller -> service impact and upstream-change checks | check-intelligence.ps1 brownfield section | implemented static reasoning; runtime enhancement pending |
-| PDF-06 | Four intelligence Agent roles through ModelProvider/AgentExecutor | ScheduledIntelligenceTest proves automatic stage dispatch | Workflow GET analyses/artifacts/attempts | implemented intelligence; full SDLC pending |
-| PDF-09 | Parent revisions, invalidation, exact-manifest repository inventory reuse | Clarification, stale revision, changed source and approval invalidation | check-intelligence.ps1 clarification/replan sections | implemented revision planning; downstream recovery pending |
-| PDF-12 | RepositoryTools bounded UTF-8 roots/types/count/size/search/link checks | RepositoryToolsTest; Windows native-link rejection passed | Latest targeted suite | implemented guards; hostile-process OS isolation pending |
-| PDF-13 / PDF-17 | Attempt/artifact/validation/audit storage; no completion API | 26 API boundary checks and analysis workflow tests | check-intelligence.ps1, check-foundation.ps1 | implemented analysis lineage; final outcome pending |
-
-Initial matrix entries above identify the original foundation and delivery allocation.
-The subsequent tables record implemented behavior without treating a plan as a
-completed engineering outcome. Analysis/planning and a generated create/redirect
-slice now execute. Repair, complete release governance, hardening and failover remain
-pending. Latest clean verification passed 100 tests with no failures/errors/skips;
-coverage is 95.00% lines and 71.48% branches. The target-package regression and
-HTTP-only PostgreSQL engineering scenario passed. REVIEWER-GUIDE.md describes the
-retained source/test/diff/log/hash/outcome evidence and persistent local demo.
-
-## Implemented first engineering execution slice
-
-| PDF/user requirement | Implementation | Meaningful tests | Runtime evidence / reviewer command | Status |
-|---|---|---|---|---|
-| PDF-01 / PDF-06 / PDF-17: agents perform engineering | EngineeringProcessor, EngineeringExecutor, specialized EngineeringAgent adapters and deterministic provider | GeneratedSliceIT; GeneratedApiIT | demo.ps1 greenfield; full engineering evidence API | bounded create/redirect slice; full SDLC recovery pending |
-| PDF-07 / PDF-10: gates and human oversight | Dependency checks; exact current-plan CHANGE approval; release gate remains closed | EngineeringWorkflowTest authentication/hash/rejection | change-approvals API and persisted approvals/audit | CHANGE gate implemented; RELEASE governance pending |
-| PDF-12 / USER-03 / USER-04: governed structured operations | FileOperation, EngineeringValidator, ProposalTool; exact atomic writes, diffs/manifests, optimistic checks and restoration | ProposalToolTest and generated-agent scope tests | FILE_PROPOSAL, MANIFEST and UNIFIED_DIFF artifacts | implemented per-file atomic application; crash-atomic batches and durable whole-workflow rollback pending |
-| PDF-15 / USER-05: real generation and compilation/tests | Original service/test templates; trusted fixed MavenBuildTool; compiler/Surefire/JaCoCo parsing | GeneratedSliceIT actual child builds; GeneratedApiIT real HTTP/PG | BUILD_EVIDENCE logs, compiled paths, cases, coverage | implemented bounded slice; other capabilities pending |
-| PDF-11 / PDF-16: failure handling and no false completion | Build failure classification and SAFE_STOPPED; no successful outcome on compiler/test failure | Genuine compiler and HTTP assertion failures | Failed attempts/builds and engineering safe-stop audit | safe stop implemented; automatic repair/retry/fallback pending |
-| PDF-13 / PDF-18: outcome and traceability | Persisted task inputs, artifact hashes, attempts, policies and bounded SliceOutcome | Criterion compiled/test mapping and releaseReady=false assertions | GET /api/v1/workflows/{id}/engineering | reviewable slice; complete final engineering outcome pending |
-
-Parallel branches remain planned but execute sequentially in this stage. Documentation
-and security artifacts expose observed build evidence and bounded static controls;
-they do not certify production security. The source fixture and immutable baseline
-remain distinct from the generated workspace. Final-image demos and all-PDF acceptance
-remain later work. Current verification totals belong in REVIEWER-GUIDE.md.
+Delivery stages 1–3 were validated with user commit hashes. Stage 4 covers stateful
+orchestration/recovery/governance/scenarios; stage 5 begins only after user validation
+and a manual commit hash. Final git diff --check is run by the user. No checkpoint
+evidence document is required; runtime evidence is exposed through APIs/reports.

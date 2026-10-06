@@ -21,8 +21,11 @@ public class ProposalTool implements EngineeringTool<List<FileOperation>,Enginee
         catch(java.io.IOException failure) { throw new IllegalStateException("Cannot inspect workspace",failure); }
     }
     public void validate(RepositoryWorkspace workspace, List<FileOperation> operations) {
+        validateAgainst(workspace,operations,read(workspace));
+    }
+    public void validateAgainst(RepositoryWorkspace workspace,List<FileOperation> operations,Map<String,String> current) {
         if(operations.isEmpty() || operations.size()>100) throw new IllegalArgumentException("Proposal count exceeds policy");
-        var current=read(workspace); var paths=new HashSet<String>(); long total=0;
+        var paths=new HashSet<String>(); long total=0;
         for(var operation:operations) {
             if(!paths.add(operation.path())) throw new IllegalArgumentException("Duplicate proposal path");
             destination(workspace,operation.path());

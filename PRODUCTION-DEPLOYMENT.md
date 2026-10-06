@@ -1,33 +1,31 @@
 # Deployment status
 
-This is a local assessment prototype with runnable intelligence, planning and a
-generated create/redirect execution slice. Compose supplies PostgreSQL 16 with a required
-password and durable named volume. The application runs through Maven. No final
-application/build image or two-orchestrator configuration exists yet.
+The current assessment prototype supports local single-instance execution, parallel
+agent branches, bounded recovery and exact evidence governance. Compose supplies
+PostgreSQL 16 with a required password and durable volume; the application runs through
+Maven. Final non-root application/build images, CI and two-orchestrator failover belong
+to stage 5 and are not yet available.
 
-Configure DB_URL, DB_USERNAME, DB_PASSWORD and AGENTIC_OPERATOR_TOKEN explicitly.
-The operator token has no insecure default. Use distinct approved repository and
-workspace roots with restrictive access; workspace/source inventory can contain
-private engineering material. Do not commit secrets or runtime workspaces.
+Configure DB_URL, DB_USERNAME, DB_PASSWORD, AGENTIC_OPERATOR_TOKEN and distinct approved
+repository/workspace roots. Use the password that initialized an existing database.
+Set AGENTIC_MAVEN_REPOSITORY to the existing dependency cache and
+AGENTIC_BUILD_ASSETS_ROOT when launching outside the project directory. Flyway clean
+is disabled. H2 is test-only. Do not commit secrets or generated runtime workspaces.
 
-The intake worker claims rows atomically. It is not a distributed crash-recovery
-worker: interrupted claimed analysis can require intervention. Single-instance
-review is supported now; leases/fencing, recovery and failover are required before
-running multiple orchestrators.
+Queue claims prevent simultaneous execution of one queued run, but do not recover a
+crash after claim. A running build is cancellable; process interruption/crash requires
+intervention until durable leases/fencing/restart recovery are added. PostgreSQL stores
+ledger evidence; workspace/baseline files also need durable storage. Per-file writes
+and handled-failure rollback do not establish crash-atomic filesystem/database writes.
 
-Local child builds use the checked-in platform wrapper assets and a pinned generated
-POM. Set AGENTIC_MAVEN_REPOSITORY to the existing Maven cache location; configure
-AGENTIC_BUILD_ASSETS_ROOT when launching outside the project root. Build streams are
-bounded and timeouts terminate descendants. This is a trusted deterministic local
-generator, not an arbitrary-code execution service. An interrupted claimed engineering
-run needs intervention until leases/recovery are implemented. Generated service data
-is in memory and cannot be treated as a durable production URL service yet.
+Builds use a pinned platform POM/wrapper and a filtered environment, not arbitrary
+model commands. NIO guards are not full hostile-code isolation. Production needs
+restricted build workers/mounts/resources/network, independent identities/roles,
+protected read APIs/metrics, TLS, backups and credential management. Generated service
+data is in memory, so this release outcome is an engineering-review decision rather
+than an authorization to deploy a durable public URL service.
 
-Pending deployment work: non-root app/build images, isolated restricted build
-workers without platform credentials, durable shared evidence storage, backups,
-identity/roles, TLS, protected metrics, resource/network controls, CI, coverage
-thresholds and restart/failover evidence. Flyway clean is disabled; H2 is test-only.
-
-Optional after acceptance: Kubernetes, multi-region deployment, dedicated hardened
-build hosts, distributed tracing and external models. Redis/Kafka are not required
-for the deterministic assessment path.
+Rubric-critical stage 5: complete URL APIs/security/persistence/concurrency/cleanup,
+coverage enforcement, non-root images, two workers and durable failover, CI, final-image
+six demos and complete PDF acceptance. Optional later hardening: Kubernetes, multi-region,
+dedicated hardened build hosts, distributed tracing and external model providers.

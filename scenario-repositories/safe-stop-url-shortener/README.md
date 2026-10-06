@@ -1,0 +1,1 @@
+Original unsupported-failure fixture. TargetApplication intentionally references UnknownApplication.class. No deterministic repair capability handles this defect; the platform must persist actual compiler evidence, restore the isolated baseline and safely stop without release readiness.

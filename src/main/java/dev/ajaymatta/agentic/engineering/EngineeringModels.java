@@ -2,6 +2,8 @@ package dev.ajaymatta.agentic.engineering;
 
 import dev.ajaymatta.agentic.execution.*;
 import dev.ajaymatta.agentic.planning.EngineeringPlan;
+import dev.ajaymatta.agentic.governance.*;
+import java.time.Instant;
 import java.util.*;
 
 public final class EngineeringModels {
@@ -19,7 +21,21 @@ public final class EngineeringModels {
                                     List<String> executedTests) {}
     public record SliceOutcome(boolean releaseReady, String decision, String planHash, String manifestHash,
                                BuildEvidence build, List<CriterionEvidence> traceability, List<String> artifactHashes,
-                               List<String> limitations) {}
+                               List<String> limitations, boolean featureComplete, List<GateCheck> gates,
+                               List<Approval> approvals,List<PolicyDecision> policies,List<ExecutionAttempt> attempts,
+                               List<RecoveryEvidence> recovery,List<String> assumptions,List<String> risks) {
+        public SliceOutcome(boolean releaseReady,String decision,String planHash,String manifestHash,BuildEvidence build,
+                            List<CriterionEvidence> traceability,List<String> artifactHashes,List<String> limitations) {
+            this(releaseReady,decision,planHash,manifestHash,build,traceability,artifactHashes,limitations,false,
+                    List.of(),List.of(),List.of(),List.of(),List.of(),List.of(),List.of());
+        }
+    }
     public record View(String state, String decision, RepositoryWorkspace workspace,
-                       List<EngineeringArtifact> artifacts, SliceOutcome outcome) {}
+                       List<EngineeringArtifact> artifacts, SliceOutcome outcome,List<Approval> approvals,
+                       List<PolicyDecision> policies,List<RecoveryEvidence> recovery,List<RollbackAction> rollbacks,List<GateCheck> gates) {}
+    public record GateCheck(String gate,boolean passed,String evidenceHash,String summary) {}
+    public record Diagnosis(BuildEvidence.FailureClassification classification,List<String> affectedPaths,
+                            List<String> failedTests,String evidenceExcerpt,boolean repairable,String strategy) {}
+    public record RecoveryEvidence(UUID id,UUID attemptId,String action,int maximumAttempts,long delayMs,
+                                   String reason,UUID repairArtifactId,Instant createdAt) {}
 }

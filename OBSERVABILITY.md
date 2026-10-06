@@ -1,26 +1,32 @@
 # Observability
 
-Actuator provides database-aware readiness, database-independent liveness and
-baseline Prometheus JVM/process/HTTP/pool instrumentation. Workflow success rate,
-retry/rollback frequency, MTTR and end-to-end outcome latency remain pending.
-Analysis success is not engineering success and must not enter release metrics.
+Database-aware readiness, independent liveness and JVM/process/HTTP/pool metrics are
+available through Actuator. GET workflow and engineering expose persisted attempts,
+artifacts/input hashes, evaluated gates, policies, approvals, recovery and rollback.
+Audit records cover dispatch, validated output, patch/build evidence, state transitions,
+revision changes, exact human decisions, invalidation and verified baseline restoration.
 
-GET workflow returns current requirement/repository/plan evidence, artifact IDs
-and hashes, input lineage, attempts and audit. Events cover agent start/validation,
-snapshot verification, state transitions, revision creation and safe stop. Hashes
-and IDs belong in the ledger rather than unbounded metric labels.
+| Micrometer metric | Meaning |
+|---|---|
+| agentic.release.success.rate | Durable current RELEASE_READY workflows / terminal workflows; zero when no terminal workflows |
+| agentic.workflows.outcomes | Terminal release/stop/rollback/cancellation transitions; bounded outcome label |
+| agentic.workflow.duration | Submission-to-terminal-transition duration; bounded outcome label |
+| agentic.agent.duration | Agent/tool attempt duration; fixed role labels |
+| agentic.retries | Repair-backed build retries, bounded failure classification |
+| agentic.fallbacks | Unsupported/exhausted recovery decisions, bounded action |
+| agentic.rollbacks | Restoration attempts, verified=true/false |
+| agentic.recovery.duration | First failed build start to subsequent successful verification; histogram/timer mean supports MTTR inspection |
 
-Revision actions record authenticated operator labels. Shared-token operator labels
-are not independently authenticated enterprise identities. Requirement text and
-source inventory are persisted for engineering reasoning; public endpoints require
-production authentication before deployment. Error responses omit paths/SQL/parser
-internals. Tokens are neither persisted nor passed to intelligence providers.
+Prometheus exports these with underscore names and timer _seconds suffixes through
+/actuator/prometheus. Timers/counters are process-local and reset on restart; the
+release success gauge queries durable workflow state. Transition counts can include
+later rollback of an earlier approved workflow, so they differ from unique-workflow
+counts. Analysis/build success alone is never release success. IDs/hashes live in the
+ledger, not unbounded metric labels.
 
-Audit rows have an append-only application surface, not tamper-proof database-owner
-protection. Baseline copies and source are content-verified. Real engineering builds
-persist exit code, duration, timeout, compiled production paths, discovered/failed
-tests, coverage and failure classification. Each stream retains at most 60,000 bytes
-while continuing to drain the child pipe; the database cap is 65,536 characters.
-GET /api/v1/workflows/{id}/engineering exposes full proposal content, diff, manifest,
-architecture/security/docs artifacts and the bounded slice outcome. Child processes
-do not inherit DB_PASSWORD, operator tokens, JAVA_TOOL_OPTIONS or MAVEN_OPTS.
+Build evidence persists exit, duration, timeout, bounded stdout/stderr, compiled paths,
+discovered/failed tests, coverage and classification. Each stream retains a 60,000-byte
+prefix while draining the remainder. Environment secrets and Java/Maven option hooks
+are excluded from child processes. Error responses omit SQL/path/parser internals.
+Read APIs/source evidence and metrics need production access controls before deployment.
+Audit is append-only through the API, not tamper-proof against database owners.

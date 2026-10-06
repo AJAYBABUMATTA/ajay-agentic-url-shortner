@@ -24,6 +24,7 @@ import static org.awaitility.Awaitility.await;
 @SpringBootTest(webEnvironment=SpringBootTest.WebEnvironment.RANDOM_PORT,
         properties={"agentic.processing.enabled=true","agentic.processing.poll-ms=100"})
 @ActiveProfiles("test") @Testcontainers @DirtiesContext(classMode=DirtiesContext.ClassMode.AFTER_CLASS)
+@org.springframework.boot.test.autoconfigure.actuate.observability.AutoConfigureObservability
 class GeneratedApiIT {
     @Container static PostgreSQLContainer<?> postgres=new PostgreSQLContainer<>("postgres:16-alpine");
     @TempDir static Path temp;
@@ -67,9 +68,26 @@ class GeneratedApiIT {
         assertThat(Files.readString(source.resolve("README.md"))).isEqualTo("Original API fixture\n");
         assertThat(Files.exists(source.resolve("pom.xml"))).isFalse();
         assertThat(result.path("artifacts").toString()).contains("ResponseEntity.status(301)","FILE_PROPOSAL","UNIFIED_DIFF","BUILD_EVIDENCE");
+        String outcomeHash="";
+        for(var artifact:result.path("artifacts")) if(artifact.path("type").asText().equals("ENGINEERING_OUTCOME")) outcomeHash=artifact.path("sha256").asText();
+        var release=Map.of("expectedRevision",1,"outcomeHash",outcomeHash,"decision","APPROVED","reason","Reviewed immutable outcome and all traceability");
+        assertThat(post(path+"/release-approvals",release,false).statusCode()).isEqualTo(401);
+        assertThat(post(path+"/release-approvals",Map.of("expectedRevision",1,"outcomeHash","0".repeat(64),"decision","APPROVED","reason","Stale evidence"),true).statusCode()).isEqualTo(409);
+        assertThat(post(path+"/release-approvals",release,true).statusCode()).isEqualTo(200);
+        result=get(path+"/engineering");
+        assertThat(result.path("outcome").path("releaseReady").asBoolean()).isTrue();
+        assertThat(result.path("outcome").path("gates").size()).isEqualTo(10);
+        for(var gate:result.path("outcome").path("gates")) assertThat(gate.path("passed").asBoolean()).isTrue();
+        assertThat(get(path).path("workflow").path("status").asText()).isEqualTo("RELEASE_READY");
         Path retained=Files.createDirectories(Path.of("target/stage3-api-evidence"));
         Files.writeString(retained.resolve("workflow.json"),json.writerWithDefaultPrettyPrinter().writeValueAsString(get(path)));
         Files.writeString(retained.resolve("engineering.json"),json.writerWithDefaultPrettyPrinter().writeValueAsString(result));
+        Path stage4=Files.createDirectories(Path.of("target/stage4-evidence"));
+        Files.writeString(stage4.resolve("postgres-api-release.json"),json.writerWithDefaultPrettyPrinter().writeValueAsString(result));
+        var metrics=client.send(HttpRequest.newBuilder(URI.create("http://localhost:"+port+"/actuator/prometheus")).GET().build(),HttpResponse.BodyHandlers.ofString());
+        assertThat(metrics.statusCode()).isEqualTo(200);
+        assertThat(metrics.body()).contains("agentic_release_success_rate 1.0","agentic_workflows_outcomes_total{outcome=\"release_ready\"}","agentic_agent_duration_seconds_count","agentic_workflow_duration_seconds_count");
+        Files.writeString(stage4.resolve("postgres-metrics.prom"),metrics.body());
     }
     private JsonNode get(String path) throws Exception {
         var result=client.send(HttpRequest.newBuilder(URI.create("http://localhost:"+port+path)).timeout(Duration.ofSeconds(20)).GET().build(),HttpResponse.BodyHandlers.ofString());
