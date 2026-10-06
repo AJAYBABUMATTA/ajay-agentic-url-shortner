@@ -29,6 +29,7 @@ class GeneratedApiIT {
     @Container static PostgreSQLContainer<?> postgres=new PostgreSQLContainer<>("postgres:16-alpine");
     @TempDir static Path temp;
     @DynamicPropertySource static void properties(DynamicPropertyRegistry p) {
+        p.add("agentic.operator.token",()->"test-only-operator-token");
         p.add("spring.datasource.url",postgres::getJdbcUrl); p.add("spring.datasource.username",postgres::getUsername);
         p.add("spring.datasource.password",postgres::getPassword); p.add("spring.datasource.driver-class-name",()->"org.postgresql.Driver");
         p.add("agentic.repositories.root",()->temp.resolve("sources").toString());

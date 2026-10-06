@@ -34,6 +34,7 @@ class EngineeringWorkflowTest {
     }
     @TempDir static Path temp;
     @DynamicPropertySource static void properties(DynamicPropertyRegistry p) {
+        p.add("agentic.operator.token",()->"test-only-operator-token");
         p.add("spring.datasource.url",()->"jdbc:h2:mem:engineering-boundary;MODE=PostgreSQL;DB_CLOSE_DELAY=-1");
         p.add("agentic.repositories.root",()->temp.resolve("sources").toString());
         p.add("agentic.workspaces.root",()->temp.resolve("workspaces").toString());

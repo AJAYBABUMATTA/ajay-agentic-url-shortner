@@ -26,6 +26,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class IntelligenceWorkflowTest {
     @TempDir static Path temp;
     @DynamicPropertySource static void properties(DynamicPropertyRegistry properties) {
+        properties.add("agentic.operator.token", () -> "test-only-operator-token");
         properties.add("spring.datasource.url", () -> "jdbc:h2:mem:intelligence;MODE=PostgreSQL;DB_CLOSE_DELAY=-1");
         properties.add("agentic.repositories.root", () -> temp.resolve("sources").toString());
         properties.add("agentic.workspaces.root", () -> temp.resolve("workspaces").toString());
