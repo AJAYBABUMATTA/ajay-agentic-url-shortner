@@ -79,9 +79,10 @@ Coverage is reported now; numeric coverage enforcement is scheduled for commit 5
 
 The Apache Windows wrapper has a local null-safe directory-target lookup adjustment:
 regular `.m2` directories can return a null `Target` in Windows PowerShell. Version
-3.3.4 and Maven 3.9.11 remain pinned. The user's build compiled and ran 43 tests,
-with one metrics-test failure. The test configuration correction and successful
-full verification remain pending; see CHECKPOINT-1-EVIDENCE.md.
+3.3.4 and Maven 3.9.11 remain pinned. Verification passed: 43 default tests and
+4 real PostgreSQL checks, with no failures/errors/skips. JaCoCo line coverage is
+83.09%; the live foundation script passed. See REVIEWER-GUIDE.md for verification
+and limits. These checks validate the foundation, not the complete engineering chain.
 
 See [TRACEABILITY.md](TRACEABILITY.md), [REVIEWER-GUIDE.md](REVIEWER-GUIDE.md) and
 [MANUAL-ACCEPTANCE.md](MANUAL-ACCEPTANCE.md) for evidence boundaries and review steps.

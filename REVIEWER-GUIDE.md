@@ -18,6 +18,12 @@ and a JaCoCo report is produced. Real PostgreSQL tests require Docker and an
 available `postgres:16-alpine` image. The profile fails if Docker is missing;
 default H2 test success does not replace PostgreSQL verification.
 
+Verified foundation results: 43 default tests plus 4 real PostgreSQL tests, for
+47 passing tests with zero failures, errors or skips. JaCoCo measured 83.09% line
+coverage and 54.55% branch coverage. Coverage thresholds are not yet enforced.
+The live foundation script also passed, confirming persisted intake and rejected
+caller completion requests. These results validate the foundation only.
+
 Start PostgreSQL and the application using README instructions, then run
 `scripts/check-foundation.ps1`. Expected: received workflow, pending task, audit
 event, HTTP 400 for caller completion injection, HTTP 404 for completion endpoint,
