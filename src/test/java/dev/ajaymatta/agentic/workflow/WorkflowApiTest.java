@@ -130,7 +130,7 @@ class WorkflowApiTest {
         String spec = mvc.perform(get("/v3/api-docs")).andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
         var paths = json.readTree(spec).get("paths");
-        assertThat(paths.size()).isEqualTo(4);
+        assertThat(paths.size()).isEqualTo(6);
         assertThat(paths.get(URL).has("post")).isTrue();
         assertThat(paths.get(URL + "/{id}").has("get")).isTrue();
         assertThat(spec).doesNotContain("/complete");

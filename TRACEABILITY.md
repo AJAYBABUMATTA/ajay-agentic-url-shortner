@@ -72,12 +72,28 @@ Final `git diff --check` is run by the user and returned as evidence.
 | PDF-12 | RepositoryTools bounded UTF-8 roots/types/count/size/search/link checks | RepositoryToolsTest; Windows native-link rejection passed | Latest targeted suite | implemented guards; hostile-process OS isolation pending |
 | PDF-13 / PDF-17 | Attempt/artifact/validation/audit storage; no completion API | 26 API boundary checks and analysis workflow tests | check-intelligence.ps1, check-foundation.ps1 | implemented analysis lineage; final outcome pending |
 
-Initial matrix entries above identify the original foundation and later delivery
-allocation. This table records the subsequent implemented behavior without claiming
-that a plan is a completed engineering outcome. Four analysis stages run; production
-generation/build/recovery/release/failover are still pending. Latest inspected clean verification
-passed 75 default tests and six PostgreSQL integration tests (81 total), with no
-failures, errors or skips. Coverage: 901/957 lines (94.15%) and 469/700 branches
-(67.00%). Live intelligence verification passed. The reported Maven totals precede the
-target-package exclusion fix; clean verification of its additional regression
-test remains pending.
+Initial matrix entries above identify the original foundation and delivery allocation.
+The subsequent tables record implemented behavior without treating a plan as a
+completed engineering outcome. Analysis/planning and a generated create/redirect
+slice now execute. Repair, complete release governance, hardening and failover remain
+pending. Latest clean verification passed 100 tests with no failures/errors/skips;
+coverage is 95.00% lines and 71.48% branches. The target-package regression and
+HTTP-only PostgreSQL engineering scenario passed. REVIEWER-GUIDE.md describes the
+retained source/test/diff/log/hash/outcome evidence and persistent local demo.
+
+## Implemented first engineering execution slice
+
+| PDF/user requirement | Implementation | Meaningful tests | Runtime evidence / reviewer command | Status |
+|---|---|---|---|---|
+| PDF-01 / PDF-06 / PDF-17: agents perform engineering | EngineeringProcessor, EngineeringExecutor, specialized EngineeringAgent adapters and deterministic provider | GeneratedSliceIT; GeneratedApiIT | demo.ps1 greenfield; full engineering evidence API | bounded create/redirect slice; full SDLC recovery pending |
+| PDF-07 / PDF-10: gates and human oversight | Dependency checks; exact current-plan CHANGE approval; release gate remains closed | EngineeringWorkflowTest authentication/hash/rejection | change-approvals API and persisted approvals/audit | CHANGE gate implemented; RELEASE governance pending |
+| PDF-12 / USER-03 / USER-04: governed structured operations | FileOperation, EngineeringValidator, ProposalTool; exact atomic writes, diffs/manifests, optimistic checks and restoration | ProposalToolTest and generated-agent scope tests | FILE_PROPOSAL, MANIFEST and UNIFIED_DIFF artifacts | implemented per-file atomic application; crash-atomic batches and durable whole-workflow rollback pending |
+| PDF-15 / USER-05: real generation and compilation/tests | Original service/test templates; trusted fixed MavenBuildTool; compiler/Surefire/JaCoCo parsing | GeneratedSliceIT actual child builds; GeneratedApiIT real HTTP/PG | BUILD_EVIDENCE logs, compiled paths, cases, coverage | implemented bounded slice; other capabilities pending |
+| PDF-11 / PDF-16: failure handling and no false completion | Build failure classification and SAFE_STOPPED; no successful outcome on compiler/test failure | Genuine compiler and HTTP assertion failures | Failed attempts/builds and engineering safe-stop audit | safe stop implemented; automatic repair/retry/fallback pending |
+| PDF-13 / PDF-18: outcome and traceability | Persisted task inputs, artifact hashes, attempts, policies and bounded SliceOutcome | Criterion compiled/test mapping and releaseReady=false assertions | GET /api/v1/workflows/{id}/engineering | reviewable slice; complete final engineering outcome pending |
+
+Parallel branches remain planned but execute sequentially in this stage. Documentation
+and security artifacts expose observed build evidence and bounded static controls;
+they do not certify production security. The source fixture and immutable baseline
+remain distinct from the generated workspace. Final-image demos and all-PDF acceptance
+remain later work. Current verification totals belong in REVIEWER-GUIDE.md.

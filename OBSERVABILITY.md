@@ -17,6 +17,10 @@ production authentication before deployment. Error responses omit paths/SQL/pars
 internals. Tokens are neither persisted nor passed to intelligence providers.
 
 Audit rows have an append-only application surface, not tamper-proof database-owner
-protection. Baseline copies and source are content-verified. Build exit/output/test/
-coverage evidence is only a contract/schema until the engineering stage. Output
-storage has a 65,536-character cap per build stream; runner truncation is pending.
+protection. Baseline copies and source are content-verified. Real engineering builds
+persist exit code, duration, timeout, compiled production paths, discovered/failed
+tests, coverage and failure classification. Each stream retains at most 60,000 bytes
+while continuing to drain the child pipe; the database cap is 65,536 characters.
+GET /api/v1/workflows/{id}/engineering exposes full proposal content, diff, manifest,
+architecture/security/docs artifacts and the bounded slice outcome. Child processes
+do not inherit DB_PASSWORD, operator tokens, JAVA_TOOL_OPTIONS or MAVEN_OPTS.

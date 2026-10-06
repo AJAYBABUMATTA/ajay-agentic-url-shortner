@@ -42,6 +42,10 @@ springdoc:
   swagger-ui:
     path: /swagger-ui.html
 agentic:
+  build:
+    assets-root: ${AGENTIC_BUILD_ASSETS_ROOT:.}
+    maven-repository: ${AGENTIC_MAVEN_REPOSITORY:}
+    timeout-seconds: 180
   operator:
     token: ${AGENTIC_OPERATOR_TOKEN:}
   processing:

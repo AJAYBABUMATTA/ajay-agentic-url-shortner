@@ -33,7 +33,9 @@ public class DynamicPlanner {
             priorImpacts.forEach((key, prior) -> { if (!Collections.disjoint(prior, paths)) dependencies.add(key); });
             tasks.add(task(implement, AgentRole.IMPLEMENTATION, dependencies, List.of(criterion.id()), paths, Gate.CHANGE_APPROVED, Gate.PROPOSAL_VALID));
             String test = "test-" + criterion.capability();
-            tasks.add(task(test, AgentRole.TESTING, List.of(implement), List.of(criterion.id()), paths, Gate.DEPENDENCIES_SUCCEEDED, Gate.PROPOSAL_VALID));
+            List<String> testPaths = repository.greenfield() && List.of("create","redirect").contains(criterion.capability())
+                    ? List.of("src/test/java/dev/ajaymatta/generated/" + (criterion.capability().equals("create") ? "CreateUrlTest.java" : "RedirectUrlTest.java")) : paths;
+            tasks.add(task(test, AgentRole.TESTING, List.of(implement), List.of(criterion.id()), testPaths, Gate.DEPENDENCIES_SUCCEEDED, Gate.PROPOSAL_VALID));
             joins.add(test); priorImpacts.put(implement, paths);
         }
         if (joins.isEmpty()) throw new IllegalArgumentException("No behavioral criteria");
@@ -50,6 +52,9 @@ public class DynamicPlanner {
 
     private List<String> impacts(RequirementAnalysis.Criterion criterion, RepositoryMap repository) {
         if (repository.greenfield()) {
+            if (criterion.capability().equals("create")) return List.of("pom.xml", "mvnw", "mvnw.cmd", ".mvn/wrapper/maven-wrapper.properties",
+                    "src/main/java/dev/ajaymatta/generated/ShortenerApplication.java", "src/main/java/dev/ajaymatta/generated/UrlStore.java", "src/main/java/dev/ajaymatta/generated/UrlController.java");
+            if (criterion.capability().equals("redirect")) return List.of("src/main/java/dev/ajaymatta/generated/RedirectController.java");
             String type = criterion.capability().startsWith("analytics") ? "AnalyticsService"
                     : criterion.capability().equals("redirect") ? "RedirectController"
                     : criterion.capability().equals("create") || criterion.capability().equals("inspect") ? "UrlController"

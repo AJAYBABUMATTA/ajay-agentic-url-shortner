@@ -1,0 +1,84 @@
+package dev.ajaymatta.agentic.engineering;
+
+import com.fasterxml.jackson.databind.*;
+import java.net.URI;
+import java.net.http.*;
+import java.nio.file.*;
+import java.time.Duration;
+import java.util.Map;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.io.TempDir;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.test.context.*;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.context.ConfigurableApplicationContext;
+import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.junit.jupiter.*;
+import static org.assertj.core.api.Assertions.*;
+import static org.awaitility.Awaitility.await;
+
+/** HTTP-only intake/approval/inspection, real PostgreSQL and automatic executor dispatch. */
+@SpringBootTest(webEnvironment=SpringBootTest.WebEnvironment.RANDOM_PORT,
+        properties={"agentic.processing.enabled=true","agentic.processing.poll-ms=100"})
+@ActiveProfiles("test") @Testcontainers @DirtiesContext(classMode=DirtiesContext.ClassMode.AFTER_CLASS)
+class GeneratedApiIT {
+    @Container static PostgreSQLContainer<?> postgres=new PostgreSQLContainer<>("postgres:16-alpine");
+    @TempDir static Path temp;
+    @DynamicPropertySource static void properties(DynamicPropertyRegistry p) {
+        p.add("spring.datasource.url",postgres::getJdbcUrl); p.add("spring.datasource.username",postgres::getUsername);
+        p.add("spring.datasource.password",postgres::getPassword); p.add("spring.datasource.driver-class-name",()->"org.postgresql.Driver");
+        p.add("agentic.repositories.root",()->temp.resolve("sources").toString());
+        p.add("agentic.workspaces.root",()->temp.resolve("workspaces").toString());
+    }
+    @LocalServerPort int port;
+    @Autowired ObjectMapper json;
+    final HttpClient client=HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build();
+    @AfterAll static void stopWorkerBeforeDatabase(@Autowired ConfigurableApplicationContext context) {
+        context.getBeansOfType(org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler.class).values().forEach(org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler::shutdown);
+    }
+    @Test void publicApiAutomaticallyGeneratesAndVerifiesAReviewableService() throws Exception {
+        Path source=Files.createDirectories(temp.resolve("sources/greenfield")); Files.writeString(source.resolve("README.md"),"Original API fixture\n");
+        var submitted=post("/api/v1/workflows",Map.of("requirement","Create URL-shortener with HTTP 301 redirects","repositoryPath","greenfield"),false);
+        assertThat(submitted.statusCode()).isEqualTo(202);
+        String id=json.readTree(submitted.body()).path("workflow").path("id").asText();
+        String path="/api/v1/workflows/"+id;
+        await().atMost(Duration.ofSeconds(30)).untilAsserted(()->assertThat(get(path).path("workflow").path("status").asText()).isEqualTo("AWAITING_CHANGE_APPROVAL"));
+        var planned=get(path);
+        String hash=planned.path("intelligence").path("planHash").asText();
+        var approval=Map.of("expectedRevision",1,"planHash",hash,"decision","APPROVED","reason","Integration reviewer inspected exact current plan");
+        assertThat(post(path+"/change-approvals",approval,false).statusCode()).isEqualTo(401);
+        assertThat(post(path+"/change-approvals",approval,true).statusCode()).isEqualTo(202);
+        await().atMost(Duration.ofSeconds(240)).pollInterval(Duration.ofMillis(500)).untilAsserted(()-> {
+            var engineering=get(path+"/engineering");
+            if(engineering.path("state").asText().equals("FAILED")) throw new IllegalStateException("Persisted failure evidence: "+engineering);
+            assertThat(engineering.path("state").asText()).isEqualTo("SUCCEEDED");
+        });
+        var result=get(path+"/engineering"); var outcome=result.path("outcome");
+        assertThat(outcome.path("releaseReady").asBoolean()).isFalse();
+        assertThat(outcome.path("build").path("compiledProductionPaths").size()).isEqualTo(4);
+        assertThat(outcome.path("build").path("discoveredTests").size()).isEqualTo(5);
+        assertThat(outcome.path("build").path("failedTests").size()).isZero();
+        assertThat(outcome.path("build").path("coverage").path("available").asBoolean()).isTrue();
+        assertThat(outcome.path("traceability").size()).isEqualTo(2);
+        assertThat(get(path).path("workflow").path("status").asText()).isEqualTo("AWAITING_RELEASE_APPROVAL");
+        assertThat(Files.readString(source.resolve("README.md"))).isEqualTo("Original API fixture\n");
+        assertThat(Files.exists(source.resolve("pom.xml"))).isFalse();
+        assertThat(result.path("artifacts").toString()).contains("ResponseEntity.status(301)","FILE_PROPOSAL","UNIFIED_DIFF","BUILD_EVIDENCE");
+        Path retained=Files.createDirectories(Path.of("target/stage3-api-evidence"));
+        Files.writeString(retained.resolve("workflow.json"),json.writerWithDefaultPrettyPrinter().writeValueAsString(get(path)));
+        Files.writeString(retained.resolve("engineering.json"),json.writerWithDefaultPrettyPrinter().writeValueAsString(result));
+    }
+    private JsonNode get(String path) throws Exception {
+        var result=client.send(HttpRequest.newBuilder(URI.create("http://localhost:"+port+path)).timeout(Duration.ofSeconds(20)).GET().build(),HttpResponse.BodyHandlers.ofString());
+        assertThat(result.statusCode()).isEqualTo(200); return json.readTree(result.body());
+    }
+    private HttpResponse<String> post(String path,Object body,boolean authenticated) throws Exception {
+        var request=HttpRequest.newBuilder(URI.create("http://localhost:"+port+path)).timeout(Duration.ofSeconds(20))
+                .header("Content-Type","application/json").POST(HttpRequest.BodyPublishers.ofString(json.writeValueAsString(body)));
+        if(authenticated) request.header("X-Operator-Id","api-integration-reviewer").header("X-Operator-Token","test-only-operator-token");
+        return client.send(request.build(),HttpResponse.BodyHandlers.ofString());
+    }
+}

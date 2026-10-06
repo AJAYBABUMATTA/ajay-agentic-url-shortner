@@ -63,7 +63,8 @@ public class WorkflowService {
     }
 
     private WorkflowDetails details(Workflow workflow, WorkflowRevision revision) {
+        boolean executing = workflow.status() == WorkflowStatus.EXECUTING;
         return new WorkflowDetails(workflow, revision, repository.tasks(revision.id()),
-                repository.dependencies(revision.id()), repository.audit(workflow.id()), false, false, intelligence.view(revision.id()));
+                repository.dependencies(revision.id()), repository.audit(workflow.id()), executing, executing, intelligence.view(revision.id()));
     }
 }
